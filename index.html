@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>FC visitor register</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* WFP Design System tokens. Colour has one meaning each: blue = an action, green = served or done,
+   red = not served or an error, yellow = needs attention, grey = paused. */
+:root{--fg:#000000e9;--fg-2:#000000ab;--fg-muted:#0000008d;--border:#0000001c;--muted:#f8f8f8;--muted-2:#f1f1f1;
+  --primary:#0078b8;--primary-50:#f4f9fc;--primary-100:#e9f2fa;--primary-300:#aed1ec;--primary-700:#005795;
+  --danger:#e4052c;--danger-50:#fff7f6;--danger-400:#ff8f89;--danger-700:#ad000c;
+  --warning-50:#fff8e7;--warning-400:#dea600;--warning-700:#7d4800;
+  --success:#008442;--success-50:#f5faf6;--success-100:#e8f4eb;--success-400:#7abe8a;
+  --font:"Open Sans","Noto Sans",Roboto,ui-sans-serif,system-ui,sans-serif;--font-ur:"Noto Naskh Arabic","Noto Nastaliq Urdu",serif;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#fff}
+body{font-family:var(--font);color:var(--fg);font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--primary-300);outline-offset:2px}
+
+.app{max-width:760px;height:100%;margin:0 auto;display:flex;flex-direction:column;font-size:18px;line-height:1.4;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.app[dir="rtl"]{font-family:var(--font-ur);line-height:1.7}
+.app[dir="rtl"] .ltr{direction:ltr;unicode-bidi:isolate}
+svg.i{width:28px;height:28px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.app[dir="rtl"] svg.flip{transform:scaleX(-1)}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);min-height:68px}
+.topbar .who{flex:1;min-width:0}
+.topbar .fc{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .date{font-size:14px;color:var(--fg-2)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--fg-2);border:1px solid var(--border);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--warning-400)}
+.chip.ok .dot{background:var(--success)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:48px;height:48px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:15px;font-weight:600}
+.savefail{background:var(--danger-50);border-bottom:1px solid var(--danger-400);color:var(--danger-700);padding:10px 16px;font-size:15px;font-weight:600}
+.main{flex:1;overflow:auto;padding:20px 20px 24px;display:flex;flex-direction:column;gap:16px}
+.counts{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.counts div{padding:10px 4px}
+.counts div + div{padding-inline-start:20px;border-inline-start:1px solid var(--border)}
+.counts b{display:block;font-size:36px;line-height:1.1;font-weight:700}
+.counts span{font-size:15px;color:var(--fg-2)}
+.big{display:flex;align-items:center;gap:16px;width:100%;border:2px solid var(--primary);border-radius:6px;padding:16px 20px;text-align:start;min-height:104px}
+.big svg.i{width:40px;height:40px}
+.big strong{display:block;font-size:26px;line-height:1.2}
+.big small{display:block;font-size:15px;font-weight:400;margin-top:2px}
+.big.arrive{background:var(--primary);color:#fff}
+.big.leave{background:#fff;color:var(--primary-700)}
+.big.arrive:active{background:var(--primary-700)}
+.big.leave:active{background:var(--primary-50)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row2 .big{min-height:72px;padding:12px 16px;gap:12px}
+.row2 .big svg.i{width:32px;height:32px}
+.row2 .big strong{font-size:22px}
+.homehint{font-size:15px;color:var(--fg-2);margin:0}
+.foot{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border)}
+.foot .iconbtn{flex:1;height:56px;font-size:16px}
+h2.q{font-size:26px;line-height:1.3;margin:4px 0 0;font-weight:700}
+.app[dir="rtl"] h2.q{line-height:1.6}
+.hint{font-size:16px;color:var(--fg-2);margin:0}
+.opts{display:grid;gap:12px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 16px;border:1px solid #cccccc;border-radius:6px;background:#fff;text-align:start;font-size:18px;font-weight:600}
+.opt svg.i{color:var(--primary)}
+.opt:active{background:var(--primary-50)}
+.opt.yes{background:var(--success);border-color:var(--success);color:#fff}
+.opt.no{background:var(--danger);border-color:var(--danger);color:#fff}
+.opt.yes svg.i,.opt.no svg.i{color:#fff}
+.opt.yes,.opt.no,.opt.later{min-height:80px;font-size:21px}
+.opt.later{background:var(--muted-2)}
+.opt.later svg.i{color:var(--fg-2)}
+.grp{font-size:15px;font-weight:600;color:var(--fg-2);margin:6px 0 -4px}
+.back{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0;min-height:48px;font-size:16px;color:var(--primary);font-weight:600}
+.back svg.i{width:22px;height:22px}
+.vnum{font-size:20px;color:var(--fg-2)}
+.vnum b{font-size:44px;color:var(--primary);margin-inline-start:8px}
+.visitline{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:16px;color:var(--fg-2);padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.visitline b{color:var(--fg)}
+.display{display:flex;align-items:center;justify-content:center;height:84px;border:2px solid var(--primary-300);border-radius:6px;font-size:48px;font-weight:700;background:var(--primary-50)}
+.display.err{border-color:var(--danger-400);background:var(--danger-50)}
+.match{min-height:28px;font-size:16px;text-align:center;color:var(--fg-2)}
+.match.err{color:var(--danger-700)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;direction:ltr}
+.pad button{height:68px;border:1px solid #cccccc;border-radius:6px;background:#fff;font-size:28px;font-weight:600}
+.pad button:active{background:var(--primary-100)}
+.pad .ok{background:var(--primary);border-color:var(--primary);color:#fff;font-size:22px}
+.pad .ok:disabled{background:var(--muted-2);border-color:var(--border);color:var(--fg-muted)}
+.wide{width:100%;min-height:56px;border:1px solid #cccccc;border-radius:6px;background:#fff;font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px}
+.done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.done .tick{width:88px;height:88px;border-radius:50%;background:var(--success-100);color:var(--success);display:flex;align-items:center;justify-content:center}
+.done .tick svg.i{width:52px;height:52px;stroke-width:2.4}
+.done .label{font-size:20px;color:var(--fg-2)}
+.done .num{font-size:120px;line-height:1;font-weight:700;color:var(--primary)}
+.done .say{font-size:20px;line-height:1.45;max-width:480px;padding:12px 16px;border:1px solid var(--primary-300);background:var(--primary-50);border-radius:6px}
+.done .msg{font-size:28px;font-weight:700}
+.app[dir="rtl"] .done .say{line-height:1.9}
+.done .sub{font-size:17px;color:var(--fg-2)}
+.done .actions{display:flex;gap:12px;width:100%;max-width:480px;margin-top:8px}
+.done .actions button{flex:1;height:56px;border-radius:6px;font-size:18px;font-weight:600;border:1px solid #cccccc;background:#fff}
+.done .actions .primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.timer{width:100%;max-width:480px;height:4px;background:var(--muted-2);border-radius:99px;overflow:hidden}
+.timer b{display:block;height:100%;width:100%;background:var(--primary-300);transform-origin:left;animation:shrink 6s linear forwards}
+.app[dir="rtl"] .timer b{transform-origin:right}
+@keyframes shrink{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.timer b{animation:none}}
+.board-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:16px;font-weight:600;margin-top:4px}
+.board-h span{font-weight:400;color:var(--fg-2);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;height:88px;border:1px solid #cccccc;border-radius:6px;background:#fff;padding:4px}
+.tile b{font-size:30px;line-height:1.1}
+.tile span{font-size:13px;color:var(--fg-2)}
+.tile.long{background:var(--warning-50);border-color:var(--warning-400)}
+.tile.out{border-style:dashed;background:var(--muted)}
+.tile:active{background:var(--primary-100)}
+.empty{font-size:15px;color:var(--fg-muted);padding:8px 0}
+.sumgrid{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border)}
+.sumgrid div{padding:12px 8px 12px 0;border-bottom:1px solid var(--border)}
+.sumgrid b{display:block;font-size:28px;line-height:1.15}
+.sumgrid span{font-size:14px;color:var(--fg-2)}
+.bars{display:grid;gap:6px;font-size:14px}
+.bars .r{display:grid;grid-template-columns:56px 1fr 34px;gap:8px;align-items:center}
+.bars .t{height:14px;background:var(--muted-2);border-radius:3px;overflow:hidden}
+.bars .t b{display:block;height:100%;background:#545454;border-radius:3px}
+.bars .r.peak .t b{background:var(--primary)}
+.bars .n{text-align:end}
+.sec{font-size:17px;font-weight:700;margin:6px 0 0}
+.alert{border:1px solid var(--warning-400);background:var(--warning-50);border-radius:6px;padding:12px 16px;font-size:16px}
+.alert.ok{border-color:var(--success-400);background:var(--success-50)}
+.alert.err{border-color:var(--danger-400);background:var(--danger-50);color:var(--danger-700)}
+.btn-main{width:100%;min-height:56px;border:0;border-radius:6px;background:var(--primary);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-line{width:100%;min-height:56px;border:2px solid var(--primary);border-radius:6px;background:#fff;color:var(--primary-700);font-size:18px;font-weight:700}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.list li{display:flex;gap:12px;align-items:flex-start;font-size:18px}
+.list li svg.i{width:26px;height:26px;margin-top:2px}
+.list.yes svg.i{color:var(--success)}
+.list.no svg.i{color:var(--danger)}
+.days{display:grid}
+.days .d{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:16px}
+.days .d span{flex:1}
+.days .d small{display:block;color:var(--fg-2);font-size:14px}
+.linkbtn{border:0;background:none;padding:0;min-height:48px;color:var(--primary);font-weight:600;font-size:16px;text-decoration:underline;text-underline-offset:2px}
+/* set-up form (supervisor, English only) */
+.form{display:grid;gap:16px}
+.field label{display:block;font-weight:600;font-size:16px;margin-bottom:4px}
+.field small{display:block;color:var(--fg-2);font-size:14px;margin-bottom:6px}
+.field input,.field select{width:100%;min-height:52px;padding:8px 12px;border:1px solid #cccccc;border-radius:6px;background:#fff;font-size:18px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-height:52px;border:1px solid #cccccc;border-radius:6px;background:#fff;font-size:16px}
+.seg button[aria-pressed="true"]{background:var(--primary-100);border-color:var(--primary-300);color:var(--primary-700);font-weight:700}
+.err-t{color:var(--danger-700);font-size:15px;min-height:20px}
+</style>
+</head>
+<body>
+<div class="app" id="app" aria-live="polite"></div>
+<script src="core.js"></script>
+<script>
+(function(){
+'use strict';
+var C=window.Core, KEY='fcvr-v1';
+
+/* ---------- words (Urdu is a draft for native proofreading) ---------- */
+var T={
+en:{
+ inside:'Inside now', today:'Arrived today', arrive:'Arriving', arrive_s:'Someone has come for a BNP service',
+ leave:'Leaving', leave_s:'Someone is going home', who:'Who to count', close:'End of day', lang:'اردو',
+ home_hint:'Count each person once a day. Unsure who to count? Tap Who to count below.',
+ file_sent:'File sent {t}', file_not:'File not sent', up_ok:'Uploaded {t}', up_wait:'{n} to upload',
+ up_now:'Upload now', up_done:'Everything is uploaded ({t}).', up_off:'No internet. The tablet uploads by itself when it is back online.',
+ up_err:'Upload did not work ({e}). The records are safe on the tablet; it tries again every 15 minutes. You can also send the file.', savefail:'This tablet could not save the last entry. Tell your supervisor.',
+ back:'Back',
+ q_type:'Ask: what have you come for today?', h_type:'One tap. Count only the person seeking the service, not companions.',
+ type_N:'New registration', type_F:'Follow-up visit', type_R:'Referred here', type_I:'Only information',
+ has_no:'Already has a number from earlier today',
+ q_card:'Give a card and type its number', card_used:'Card {n} is already in use today', card_ok:'Card {n} is free',
+ their_no:'Their number', say_slip:'Say: “Your number is {n}. Show me this number when you leave.”',
+ say_card:'Give card {n}. Say: “Give this card back to me when you leave.”',
+ next:'Next visitor', undo:'Undo',
+ q_exit:'Ask their number', h_exit_slip:'The number they were given on arrival.', h_exit_card:'Take back the card and type its number.',
+ no_no:'No number (forgot or lost it)', not_open:'No open visit with number {n}', found:'Arrived {t}, {d} ago', ok:'OK',
+ q_out:'Did you get the service today?', yes:'Yes, got the service', no:'No, did not get it', later:'Not finished, coming back today',
+ arrived_at:'Arrived', at_fc:'At FC', no_match:'No arrival record',
+ q_svc:'Which service?', svc_reg:'Registered (new)', svc_fu:'Follow-up done', svc_info:'Information or counselling', svc_ref:'Referred elsewhere',
+ q_reason:'What is the main reason?', g_elig:'Eligibility', g_ops:'FC operations',
+ r_not_elig:'Not eligible', r_pmt:'PMT, NSER or Kafaalat issue', r_docs:'Documents missing', r_dup:'Already registered', r_criteria:'Pregnancy or child age criteria not met',
+ r_system:'System or internet down', r_crowd:'Too many people today', r_staff:'Staff not available', r_food:'Food not available', r_another_day:'Told to come another day', r_left:'Left before their turn', r_other:'Other reason',
+ done_exit:'Visit {n} closed', done_exit_nm:'Exit recorded', done_out:'Number {n} is out. They keep the number.', done_back:'Welcome back, number {n}',
+ time_fc:'Time at FC: {d}', out_q:'Number {n} went out earlier today', out_back:'Back inside now', out_leave:'Leaving for good',
+ b_inside:'Inside now', b_inside_h:'Tap a number when that person leaves', b_out:'Out, coming back today', b_none:'Nobody here yet',
+ sum_t:'Today so far', s_arr:'Arrived', s_served:'Served', s_not:'Not served', s_open:'Still open', s_noexit:'No exit check', s_med:'Typical time at FC', s_cap:'Exits recorded',
+ by_hour:'Arrivals by hour', top_r:'Main reasons for no service', none_yet:'None yet',
+ close_warn:'{n} visits are still open. At closing time, tap Close the day: they will be marked “left without exit check”.',
+ close_btn:'Close the day', closed_now:'Open visits closed. Now send today’s file.',
+ send:'Send today’s file', send_h:'Send it every evening to ISU by WhatsApp or email.', share_fail:'Sharing is not available here, so the file was saved to Downloads. Send it from there.',
+ earlier:'Earlier days', send_again:'Send', visits_n:'{n} visits', not_sent:'Not sent', sent:'Sent {t}', settings:'Tablet settings',
+ pin_t:'Supervisor PIN', pin_bad:'Wrong PIN',
+ who_t:'Who to count', who_yes:'Count', who_no:'Do not count',
+ y1:'A woman coming for a BNP service (pregnant, breastfeeding, or with a child under 2)',
+ y2:'Anyone bringing a child under 2 for the service (father, grandmother)',
+ y3:'Someone asking for BNP information for their family',
+ n1:'People only keeping someone company', n2:'Children with their mother (count the mother once)',
+ n3:'FC staff, drivers, suppliers, visitors to other offices', n4:'The same person again today: use their number, do not tap Arriving',
+ who_tip:'Ask yourself: is this person here to be served? If yes, count them.',
+ min:'min', h:'h'
+},
+ur:{
+ inside:'اس وقت اندر', today:'آج آنے والے', arrive:'آمد', arrive_s:'کوئی سروس کے لیے آیا ہے',
+ leave:'روانگی', leave_s:'کوئی گھر جا رہا ہے', who:'کسے گننا ہے', close:'دن کا اختتام', lang:'English',
+ home_hint:'ہر فرد کو دن میں ایک بار گنیں۔ شک ہو تو نیچے ’کسے گننا ہے‘ دبائیں۔',
+ file_sent:'فائل بھیج دی گئی {t}', file_not:'فائل نہیں بھیجی', up_ok:'اپ لوڈ ہو گیا {t}', up_wait:'{n} اپ لوڈ ہونا باقی',
+ up_now:'ابھی اپ لوڈ کریں', up_done:'سب کچھ اپ لوڈ ہو گیا ({t})۔', up_off:'انٹرنیٹ نہیں۔ انٹرنیٹ آنے پر ٹیبلٹ خود اپ لوڈ کر دے گا۔',
+ up_err:'اپ لوڈ نہیں ہو سکا ({e})۔ ریکارڈ ٹیبلٹ پر محفوظ ہے؛ ہر 15 منٹ بعد دوبارہ کوشش ہو گی۔ آپ فائل بھی بھیج سکتے ہیں۔', savefail:'ٹیبلٹ آخری اندراج محفوظ نہیں کر سکا۔ اپنے سپروائزر کو بتائیں۔',
+ back:'پیچھے',
+ q_type:'پوچھیں: آج کس کام سے آنا ہوا؟', h_type:'ایک بار دبائیں۔ صرف سروس لینے والے کو گنیں، ساتھ آنے والوں کو نہیں۔',
+ type_N:'نئی رجسٹریشن', type_F:'فالو اپ وزٹ', type_R:'ریفر ہو کر آئے ہیں', type_I:'صرف معلومات کے لیے',
+ has_no:'آج پہلے سے نمبر موجود ہے',
+ q_card:'کارڈ دیں اور اس کا نمبر درج کریں', card_used:'کارڈ {n} آج پہلے سے استعمال میں ہے', card_ok:'کارڈ {n} دستیاب ہے',
+ their_no:'ان کا نمبر', say_slip:'بتائیں: ’آپ کا نمبر {n} ہے۔ جاتے وقت یہ نمبر مجھے بتائیں۔‘',
+ say_card:'کارڈ {n} دیں۔ بتائیں: ’جاتے وقت یہ کارڈ مجھے واپس کریں۔‘',
+ next:'اگلا فرد', undo:'واپس لیں',
+ q_exit:'ان کا نمبر پوچھیں', h_exit_slip:'وہ نمبر جو آمد پر دیا گیا تھا۔', h_exit_card:'کارڈ واپس لیں اور اس کا نمبر درج کریں۔',
+ no_no:'نمبر نہیں ہے (بھول گئے یا گم ہو گیا)', not_open:'نمبر {n} کا کوئی کھلا ریکارڈ نہیں', found:'آمد {t}، {d} پہلے', ok:'ٹھیک ہے',
+ q_out:'کیا آج سروس مل گئی؟', yes:'جی ہاں، سروس مل گئی', no:'نہیں، سروس نہیں ملی', later:'کام باقی ہے، آج واپس آئیں گے',
+ arrived_at:'آمد', at_fc:'مرکز میں وقت', no_match:'آمد کا ریکارڈ نہیں',
+ q_svc:'کون سی سروس ملی؟', svc_reg:'رجسٹریشن ہو گئی (نئی)', svc_fu:'فالو اپ مکمل', svc_info:'معلومات یا مشاورت', svc_ref:'کہیں اور ریفر کیا گیا',
+ q_reason:'سروس نہ ملنے کی بنیادی وجہ کیا ہے؟', g_elig:'اہلیت سے متعلق', g_ops:'مرکز کے انتظام سے متعلق',
+ r_not_elig:'اہل نہیں', r_pmt:'پی ایم ٹی، این ایس ای آر یا کفالت کا مسئلہ', r_docs:'کاغذات مکمل نہیں', r_dup:'پہلے سے رجسٹرڈ', r_criteria:'حمل یا بچے کی عمر کی شرط پوری نہیں',
+ r_system:'سسٹم یا انٹرنیٹ بند', r_crowd:'آج رش بہت زیادہ تھا', r_staff:'عملہ موجود نہیں', r_food:'خوراک دستیاب نہیں', r_another_day:'کسی اور دن آنے کا کہا گیا', r_left:'باری سے پہلے چلے گئے', r_other:'کوئی اور وجہ',
+ done_exit:'وزٹ {n} مکمل', done_exit_nm:'روانگی درج ہو گئی', done_out:'نمبر {n} باہر گئے ہیں۔ نمبر ان کے پاس رہے گا۔', done_back:'خوش آمدید، نمبر {n}',
+ time_fc:'مرکز میں وقت: {d}', out_q:'نمبر {n} آج پہلے باہر گئے تھے', out_back:'اب واپس اندر آ گئے', out_leave:'اب گھر جا رہے ہیں',
+ b_inside:'اس وقت اندر', b_inside_h:'جو جا رہا ہو، اس کا نمبر دبائیں', b_out:'باہر گئے، آج واپس آئیں گے', b_none:'ابھی کوئی نہیں آیا',
+ sum_t:'آج اب تک', s_arr:'آمد', s_served:'سروس ملی', s_not:'سروس نہیں ملی', s_open:'ابھی کھلے', s_noexit:'روانگی درج نہیں', s_med:'مرکز میں عام وقت', s_cap:'روانگی درج ہوئی',
+ by_hour:'ہر گھنٹے میں آمد', top_r:'سروس نہ ملنے کی بڑی وجوہات', none_yet:'ابھی کوئی نہیں',
+ close_warn:'{n} وزٹ ابھی کھلے ہیں۔ مرکز بند ہوتے وقت ’دن ختم کریں‘ دبائیں: انہیں ’روانگی درج نہیں ہوئی‘ لکھا جائے گا۔',
+ close_btn:'دن ختم کریں', closed_now:'کھلے وزٹ بند کر دیے گئے۔ اب آج کی فائل بھیجیں۔',
+ send:'آج کی فائل بھیجیں', send_h:'ہر شام واٹس ایپ یا ای میل کے ذریعے آئی ایس یو کو بھیجیں۔', share_fail:'یہاں شیئر کی سہولت نہیں، اس لیے فائل ڈاؤن لوڈز میں محفوظ کر دی گئی۔ وہاں سے بھیجیں۔',
+ earlier:'پچھلے دن', send_again:'بھیجیں', visits_n:'{n} وزٹ', not_sent:'نہیں بھیجی', sent:'بھیج دی {t}', settings:'ٹیبلٹ کی ترتیبات',
+ pin_t:'سپروائزر پن', pin_bad:'غلط پن',
+ who_t:'کسے گننا ہے', who_yes:'گنیں', who_no:'نہ گنیں',
+ y1:'وہ خاتون جو بی این پی سروس کے لیے آئی ہیں (حاملہ، دودھ پلانے والی، یا دو سال سے کم عمر بچے کے ساتھ)',
+ y2:'جو بھی دو سال سے کم عمر بچے کو سروس کے لیے لائے (والد، دادی، نانی)',
+ y3:'جو اپنے گھرانے کے لیے بی این پی کی معلومات لینے آئے',
+ n1:'جو صرف ساتھ آئے ہیں', n2:'ماں کے ساتھ آنے والے بچے (ماں کو ایک بار گنیں)',
+ n3:'مرکز کا عملہ، ڈرائیور، سپلائی والے، دوسرے دفاتر میں آنے والے', n4:'آج دوبارہ آنے والا فرد: ان کا نمبر استعمال کریں، آمد نہ دبائیں',
+ who_tip:'خود سے پوچھیں: کیا یہ فرد سروس لینے آیا ہے؟ اگر ہاں، تو گنیں۔',
+ min:'منٹ', h:'گھنٹے'
+}};
+var TYPES=['N','F','R','I'], SERVICES=['reg','fu','info','ref'];
+
+/* ---------- icons ---------- */
+var P={
+ in:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ check:'<path d="M20 6L9 17l-5-5"/>', x:'<path d="M18 6L6 18M6 6l12 12"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ N:'<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a7 7 0 0 1 14 0v1M19 8v6M16 11h6"/>',
+ F:'<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
+ R:'<path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+ I:'<circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/>',
+ back:'<path d="M15 18l-6-6 6-6"/>', help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>',
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>', hash:'<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>',
+ del:'<path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6"/>',
+ send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>'
+};
+P.reg=P.N;P.fu=P.F;P.ref=P.R;P.info=P.I;
+function ic(n,cls){return '<svg class="i '+(cls||'')+'" viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>';}
+
+/* ---------- state and saving ---------- */
+var S=C.emptyState(Date.now()), ui={screen:'home',ctx:{}}, undoSnap=null, timer=null, saveFailed=false, uploading=false, upErr=null, pendingN=0;
+try{var saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)S=saved;}catch(e){saveFailed=true;}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));saveFailed=false;}catch(e){saveFailed=true;}}
+function write(fn){undoSnap=JSON.stringify({visits:S.visits,seq:S.seq});fn();persist();countPending();}
+function countPending(){pendingN=S.cfg&&S.cfg.upload_url?C.pendingUpload(S).reduce(function(a,b){return a+b.rows.length;},0):0;}
+function undo(){if(!undoSnap)return;var u=JSON.parse(undoSnap);S.visits=u.visits;S.seq=u.seq;undoSnap=null;persist();go('home');}
+function lang(){return (S.cfg&&S.cfg.lang)||'ur';}
+
+function t(k,v){var L=T[lang()],s=L[k]!=null?L[k]:T.en[k];if(v)for(var x in v)s=s.split('{'+x+'}').join(v[x]);return s;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dur(ms){var m=Math.max(0,Math.round(ms/60000)),h=Math.floor(m/60);return (h?h+' '+t('h')+' ':'')+(m%60)+' '+t('min');}
+function longDate(){return new Date().toLocaleDateString(lang()==='ur'?'ur-PK':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+function open(){return S.visits.filter(C.isOpen);}
+function live(v){return S.visits.filter(function(x){return x.no===v.no&&x.arr===v.arr;})[0];}
+
+function go(screen,ctx){clearTimeout(timer);ui.screen=screen;ui.ctx=ctx||{};render();
+  if(/^done/.test(screen))timer=setTimeout(function(){if(ui.screen===screen)go('home');},6000);
+  var m=document.querySelector('.main');if(m)m.scrollTop=0;}
+
+/* ---------- screens ---------- */
+function topbar(){
+  var sentAt=S.sentAt&&S.sentAt[S.day],up=!!S.cfg.upload_url,ok=up?!pendingN:!!sentAt;
+  var chip=up?(pendingN?t('up_wait',{n:pendingN}):t('up_ok',{t:S.lastUpload?C.hhmm(S.lastUpload):''})):(sentAt?t('file_sent',{t:C.hhmm(sentAt)}):t('file_not'));
+  return '<header class="topbar"><div class="who"><div class="fc">'+esc(S.cfg.fc_name)+'</div><div class="date">'+longDate()+'</div></div>'+
+   '<span class="chip'+(ok?' ok':'')+'"><span class="dot"></span>'+chip+'</span>'+
+   '<button class="iconbtn" data-act="lang" aria-label="Change language">'+t('lang')+'</button></header>'+
+   (saveFailed?'<div class="savefail" role="alert">'+t('savefail')+'</div>':'');
+}
+function backBtn(to,keep){return '<button class="back" data-act="'+(keep?'goKeep':'go')+'" data-v="'+(to||'home')+'">'+ic('back','flip')+t('back')+'</button>';}
+function counts(){var o=open().filter(function(v){return v.status==='in';}).length,a=S.visits.filter(function(v){return v.arr;}).length;
+  return '<div class="counts"><div><b>'+o+'</b><span>'+t('inside')+'</span></div><div><b>'+a+'</b><span>'+t('today')+'</span></div></div>';}
+function foot(){return '<nav class="foot"><button class="iconbtn" data-act="go" data-v="help">'+ic('help')+t('who')+'</button><button class="iconbtn" data-act="go" data-v="summary">'+ic('moon')+t('close')+'</button></nav>';}
+function sendBtn(day,label,main){return '<button class="'+(main?'btn-main':'btn-line')+'" data-act="send" data-v="'+day+'">'+(main?ic('send'):'')+label+'</button>';}
+
+var screens={
+ setup:function(){
+  var c=S.cfg||{fc_code:'',fc_name:'',tablet:1,lang:'ur',layout:'A',idMode:'slip',pin:''},e=ui.ctx.err||'';
+  function seg(name,opts){return '<div class="seg" data-seg="'+name+'">'+opts.map(function(o){return '<button type="button" data-act="seg" data-v="'+name+'|'+o[0]+'" aria-pressed="'+(String(c[name])===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
+  ui.draft=ui.draft||Object.assign({},c);c=ui.draft;
+  return '<main class="main" dir="ltr" lang="en-GB" style="font-family:var(--font)">'+(S.cfg?backBtn('summary'):'')+
+   '<h2 class="q">Set up this tablet</h2><p class="hint">For the FC supervisor. Done once per tablet; the crowd controller does not need this screen.</p>'+
+   '<form class="form" id="setup" autocomplete="off">'+
+   '<div class="field"><label for="f-code">FC code</label><small>As used in BNP reports, for example PB014</small><input id="f-code" name="fc_code" required maxlength="12" value="'+esc(c.fc_code)+'"></div>'+
+   '<div class="field"><label for="f-name">FC name</label><small>Shown at the top of every screen</small><input id="f-name" name="fc_name" required maxlength="40" value="'+esc(c.fc_name)+'"></div>'+
+   '<div class="field"><label for="f-tab">Tablet number at this FC</label><small>1 for the first tablet. Tablet 2 gives numbers from 501, so numbers never repeat.</small><input id="f-tab" name="tablet" type="number" inputmode="numeric" min="1" max="9" required value="'+esc(c.tablet)+'"></div>'+
+   '<div class="field"><label>Language for the crowd controller</label>'+seg('lang',[['ur','اردو'],['en','English']])+'</div>'+
+   '<div class="field"><label>Home screen</label>'+seg('layout',[['A','Two big buttons'],['B','Live number board']])+'</div>'+
+   '<div class="field"><label>Visitor number</label>'+seg('idMode',[['slip','App gives a number'],['card','Numbered cards']])+'</div>'+
+   '<div class="field"><label for="f-pin">Supervisor PIN</label><small>4 digits. Needed to open these settings again.</small><input id="f-pin" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required value="'+esc(c.pin)+'"></div>'+
+   '<div class="field"><label for="f-up">Upload address (optional)</label><small>The secret link from ISU. With it, the tablet sends its records by itself whenever it is online. Leave empty to send the daily file by WhatsApp or email only.</small><input id="f-up" name="upload_url" type="url" inputmode="url" autocapitalize="off" spellcheck="false" value="'+esc(c.upload_url||'')+'"></div>'+
+   '<div class="err-t" role="alert">'+esc(e)+'</div><button class="btn-main" type="submit">Save and start</button></form></main>';
+ },
+ pin:function(){var c=ui.ctx,val=c.val||'';
+  return topbar()+'<main class="main">'+backBtn('summary')+'<h2 class="q">'+t('pin_t')+'</h2>'+
+   '<div class="display ltr'+(c.bad?' err':'')+'">'+(val.replace(/./g,'•')||'&nbsp;')+'</div><div class="match err">'+(c.bad?t('pin_bad'):'')+'</div>'+padKeys(val.length===4)+'</main>';
+ },
+ home:function(){
+  if(S.cfg.layout!=='B') return topbar()+'<main class="main">'+counts()+
+   '<button class="big arrive" data-act="arrive">'+ic('in','flip')+'<span><strong>'+t('arrive')+'</strong><small>'+t('arrive_s')+'</small></span></button>'+
+   '<button class="big leave" data-act="leave">'+ic('out','flip')+'<span><strong>'+t('leave')+'</strong><small>'+t('leave_s')+'</small></span></button>'+
+   '<p class="homehint">'+t('home_hint')+'</p></main>'+foot();
+  var now=Date.now(),ins=open().filter(function(v){return v.status==='in';}).sort(function(a,b){return a.no-b.no;}),outs=open().filter(function(v){return v.status==='out';});
+  function tile(v){var w=now-v.arr;return '<button class="tile'+(v.status==='out'?' out':w>3*3600000?' long':'')+'" data-act="tile" data-v="'+v.no+'" aria-label="'+v.no+'"><b class="ltr">'+v.no+'</b><span class="ltr">'+C.hhmm(v.arr)+'</span><span>'+dur(w)+'</span></button>';}
+  return topbar()+'<main class="main">'+counts()+
+   '<div class="row2"><button class="big arrive" data-act="arrive">'+ic('in','flip')+'<span><strong>'+t('arrive')+'</strong></span></button>'+
+   '<button class="big leave" data-act="leave">'+ic('hash')+'<span><strong>'+t('leave')+'</strong></span></button></div>'+
+   '<div class="board-h">'+t('b_inside')+' ('+ins.length+')<span>'+t('b_inside_h')+'</span></div>'+
+   (ins.length?'<div class="tiles">'+ins.map(tile).join('')+'</div>':'<div class="empty">'+t('b_none')+'</div>')+
+   (outs.length?'<div class="board-h">'+t('b_out')+' ('+outs.length+')</div><div class="tiles">'+outs.map(tile).join('')+'</div>':'')+
+   '</main>'+foot();
+ },
+ type:function(){
+  return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('q_type')+'</h2><p class="hint">'+t('h_type')+'</p>'+
+   '<div class="opts">'+TYPES.map(function(k){return '<button class="opt" data-act="type" data-v="'+k+'">'+ic(k)+t('type_'+k)+'</button>';}).join('')+'</div>'+
+   '<button class="wide" data-act="returnNo">'+ic('F')+t('has_no')+'</button></main>';
+ },
+ pad:function(){ // ctx.mode: card | exit | returnNo
+  var c=ui.ctx,val=c.val||'',n=+val,info='',err=false,okOn=!!val;
+  if(val){
+   if(c.mode==='card'){var used=C.findOpen(S,n);err=!!used;info=used?t('card_used',{n:n}):t('card_ok',{n:n});}
+   else{var v=C.findOpen(S,n);if(v)info=t('found',{t:C.hhmm(v.arr),d:dur(Date.now()-v.arr)});else{err=true;info=t('not_open',{n:n});}}
+   okOn=!err;
+  }
+  var title=c.mode==='card'?t('q_card'):t('q_exit'),hint=c.mode==='card'?'':(S.cfg.idMode==='card'?t('h_exit_card'):t('h_exit_slip'));
+  return topbar()+'<main class="main">'+backBtn(c.mode==='card'?'type':'home')+'<h2 class="q">'+title+'</h2>'+(hint?'<p class="hint">'+hint+'</p>':'')+
+   '<div class="display ltr'+(err?' err':'')+'" role="status">'+(val||'&nbsp;')+'</div><div class="match'+(err?' err':'')+'">'+info+'</div>'+padKeys(okOn)+
+   (c.mode==='exit'?'<button class="wide" data-act="nono">'+t('no_no')+'</button>':'')+'</main>';
+ },
+ doneArr:function(){var n=ui.ctx.no;
+  return topbar()+'<main class="main"><div class="done"><div class="label">'+t('their_no')+'</div><div class="num ltr">'+n+'</div>'+
+   '<div class="say">'+t(S.cfg.idMode==='card'?'say_card':'say_slip',{n:n})+'</div>'+
+   '<div class="actions"><button data-act="undo">'+t('undo')+'</button><button class="primary" data-act="go" data-v="home">'+t('next')+'</button></div><div class="timer"><b></b></div></div></main>';
+ },
+ outcome:function(){var v=ui.ctx.v;
+  var line=v?'<div class="visitline"><span>'+t('arrived_at')+' <b class="ltr">'+C.hhmm(v.arr)+'</b></span><span>'+t('at_fc')+' <b>'+dur(Date.now()-v.arr)+'</b></span><span><b>'+t('type_'+v.type)+'</b></span></div>':'<div class="visitline">'+t('no_match')+'</div>';
+  return topbar()+'<main class="main">'+backBtn()+(v?'<div class="vnum">'+t('their_no')+' <b class="ltr">'+v.no+'</b></div>':'')+line+
+   '<h2 class="q">'+t('q_out')+'</h2><div class="opts">'+
+   '<button class="opt yes" data-act="out" data-v="yes">'+ic('check')+t('yes')+'</button>'+
+   '<button class="opt no" data-act="out" data-v="no">'+ic('x')+t('no')+'</button>'+
+   (v?'<button class="opt later" data-act="out" data-v="later">'+ic('clock')+t('later')+'</button>':'')+'</div></main>';
+ },
+ service:function(){
+  return topbar()+'<main class="main">'+backBtn('outcome',1)+'<h2 class="q">'+t('q_svc')+'</h2><div class="opts">'+
+   SERVICES.map(function(k){return '<button class="opt" data-act="svc" data-v="'+k+'">'+ic(k)+t('svc_'+k)+'</button>';}).join('')+'</div></main>';
+ },
+ reason:function(){
+  function b(k){return '<button class="opt" data-act="reason" data-v="'+k+'">'+t('r_'+k)+'</button>';}
+  return topbar()+'<main class="main">'+backBtn('outcome',1)+'<h2 class="q">'+t('q_reason')+'</h2>'+
+   '<div class="grp">'+t('g_elig')+'</div><div class="opts two">'+C.ELIG.map(b).join('')+'</div>'+
+   '<div class="grp">'+t('g_ops')+'</div><div class="opts two">'+C.OPS.map(b).join('')+'</div>'+
+   '<div class="opts">'+b('other')+'</div></main>';
+ },
+ doneExit:function(){var c=ui.ctx;
+  return topbar()+'<main class="main"><div class="done"><div class="tick">'+ic('check')+'</div><div class="msg">'+esc(c.msg)+'</div>'+
+   (c.sub?'<div class="sub">'+esc(c.sub)+'</div>':'')+
+   '<div class="actions"><button data-act="undo">'+t('undo')+'</button><button class="primary" data-act="go" data-v="home">'+t('next')+'</button></div><div class="timer"><b></b></div></div></main>';
+ },
+ outChoice:function(){var v=ui.ctx.v;
+  return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('out_q',{n:'<span class="ltr">'+v.no+'</span>'})+'</h2><div class="opts">'+
+   '<button class="opt" data-act="backin">'+ic('in','flip')+t('out_back')+'</button>'+
+   '<button class="opt" data-act="outleave">'+ic('out','flip')+t('out_leave')+'</button></div></main>';
+ },
+ summary:function(){
+  var s=C.stats(S.visits),c=ui.ctx;
+  var hs=Object.keys(s.hours).map(Number).sort(function(a,b){return a-b;}),mx=Math.max.apply(null,hs.map(function(h){return s.hours[h];}).concat([1]));
+  var peak=hs.reduce(function(a,h){return s.hours[h]>(s.hours[a]||0)?h:a;},hs[0]);
+  var rs=Object.keys(s.reasons).sort(function(a,b){return s.reasons[b]-s.reasons[a];}).slice(0,3),rmx=rs.length?s.reasons[rs[0]]:1;
+  var sentAt=S.sentAt&&S.sentAt[S.day];
+  var days=Object.keys(S.archive).sort().reverse();
+  return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('sum_t')+'</h2>'+
+   '<div class="sumgrid"><div><b>'+s.arrived+'</b><span>'+t('s_arr')+'</span></div><div><b>'+s.served+'</b><span>'+t('s_served')+'</span></div><div><b>'+s.notServed+'</b><span>'+t('s_not')+'</span></div>'+
+   '<div><b>'+s.open+'</b><span>'+t('s_open')+'</span></div><div><b>'+(s.medianMs!=null?dur(s.medianMs):'–')+'</b><span>'+t('s_med')+'</span></div><div><b>'+(s.capture!=null?s.capture+'%':'–')+'</b><span>'+t('s_cap')+'</span></div></div>'+
+   (c.closed?'<div class="alert ok">'+t('closed_now')+'</div>':s.open?'<div class="alert">'+t('close_warn',{n:s.open})+'</div>':'')+
+   (c.shareFail?'<div class="alert err">'+t('share_fail')+'</div>':'')+
+   (s.open?'<button class="btn-line" data-act="closeday">'+t('close_btn')+'</button>':'')+
+   (S.cfg.upload_url?(uploading?'<div class="alert">…</div>':upErr==='offline'?'<div class="alert">'+t('up_off')+'</div>':upErr?'<div class="alert err">'+t('up_err',{e:esc(upErr)})+'</div>':
+       !pendingN?'<div class="alert ok">'+t('up_done',{t:S.lastUpload?C.hhmm(S.lastUpload):''})+'</div>':'')+
+     (pendingN?'<button class="btn-main" data-act="upnow">'+t('up_now')+' ('+pendingN+')</button>':''):'')+
+   sendBtn(S.day,t('send'),!S.cfg.upload_url&&(!s.open||c.closed))+'<p class="hint">'+t('send_h')+(sentAt?' '+t('sent',{t:C.hhmm(sentAt)}):'')+'</p>'+
+   '<div class="sec">'+t('by_hour')+'</div>'+(hs.length?'<div class="bars">'+hs.map(function(h){return '<div class="r'+(h===peak?' peak':'')+'"><span class="ltr">'+C.pad2(h)+':00</span><div class="t"><b style="width:'+(s.hours[h]/mx*100)+'%"></b></div><span class="n">'+s.hours[h]+'</span></div>';}).join('')+'</div>':'<div class="empty">'+t('none_yet')+'</div>')+
+   '<div class="sec">'+t('top_r')+'</div>'+(rs.length?'<div class="bars">'+rs.map(function(k){return '<div class="r" style="grid-template-columns:1fr 120px 34px"><span>'+t('r_'+k)+'</span><div class="t"><b style="width:'+(s.reasons[k]/rmx*100)+'%"></b></div><span class="n">'+s.reasons[k]+'</span></div>';}).join('')+'</div>':'<div class="empty">'+t('none_yet')+'</div>')+
+   (days.length?'<div class="sec">'+t('earlier')+'</div><div class="days">'+days.map(function(d){var a=S.archive[d],st=S.sentAt&&S.sentAt[d];
+     return '<div class="d"><span class="ltr">'+d+'<small>'+t('visits_n',{n:a.visits.length})+', '+(st?t('sent',{t:C.hhmm(st)}):t('not_sent'))+'</small></span><button class="iconbtn" data-act="send" data-v="'+d+'">'+t('send_again')+'</button></div>';}).join('')+'</div>':'')+
+   '<button class="linkbtn" data-act="settings">'+t('settings')+'</button></main>';
+ },
+ help:function(){
+  return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('who_t')+'</h2><p class="hint" style="font-size:18px;color:var(--fg)">'+t('who_tip')+'</p>'+
+   '<div class="sec">'+t('who_yes')+'</div><ul class="list yes">'+['y1','y2','y3'].map(function(k){return '<li>'+ic('check')+'<span>'+t(k)+'</span></li>';}).join('')+'</ul>'+
+   '<div class="sec">'+t('who_no')+'</div><ul class="list no">'+['n1','n2','n3','n4'].map(function(k){return '<li>'+ic('x')+'<span>'+t(k)+'</span></li>';}).join('')+'</ul></main>';
+ }
+};
+function padKeys(okOn){
+  return '<div class="pad">'+[1,2,3,4,5,6,7,8,9].map(function(d){return '<button data-act="key" data-v="'+d+'">'+d+'</button>';}).join('')+
+   '<button data-act="key" data-v="del" aria-label="Delete">'+ic('del')+'</button><button data-act="key" data-v="0">0</button>'+
+   '<button class="ok" data-act="padok"'+(okOn?'':' disabled')+'>'+t('ok')+'</button></div>';
+}
+
+function render(){
+  var app=document.getElementById('app');
+  if(!S.cfg)ui.screen='setup';
+  app.setAttribute('dir',lang()==='ur'&&ui.screen!=='setup'?'rtl':'ltr');app.setAttribute('lang',lang()==='ur'?'ur':'en-GB');
+  app.innerHTML=screens[ui.screen]();
+  var f=document.getElementById('setup');if(f)f.addEventListener('submit',saveSetup);
+}
+
+/* ---------- the daily file ---------- */
+function fileFor(day){
+  var visits=day===S.day?S.visits:S.archive[day].visits;
+  var name='fc_visits_'+S.cfg.fc_code+'_T'+S.cfg.tablet+'_'+day+'.csv';
+  return new File([C.toCSV(S.cfg,day,visits)],name,{type:'text/csv'});
+}
+function markSent(day){S.sentAt=S.sentAt||{};S.sentAt[day]=Date.now();persist();}
+function send(day){
+  var f=fileFor(day);
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    navigator.share({files:[f],title:f.name}).then(function(){markSent(day);go('summary');},function(){/* cancelled: nothing sent */});
+    return;
+  }
+  var a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+  markSent(day);go('summary',{shareFail:true});
+}
+
+/* ---------- set-up ---------- */
+function saveSetup(e){
+  e.preventDefault();var fd=new FormData(e.target),d=ui.draft;
+  d.fc_code=String(fd.get('fc_code')).trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');d.fc_name=String(fd.get('fc_name')).trim();
+  d.tablet=Math.min(9,Math.max(1,parseInt(fd.get('tablet'),10)||1));d.pin=String(fd.get('pin'));
+  if(!d.fc_code||!d.fc_name)return go('setup',{err:'Enter the FC code and name.'});
+  if(!/^\d{4}$/.test(d.pin))return go('setup',{err:'The PIN must be 4 digits.'});
+  d.upload_url=String(fd.get('upload_url')||'').trim();
+  if(d.upload_url&&!/^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(d.upload_url))return go('setup',{err:'The upload address must start with https://'});
+  S.cfg=d;ui.draft=null;persist();countPending();upload();
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+  go('home');
+}
+
+/* ---------- actions ---------- */
+function newVisit(type,no){var v;write(function(){v=C.arrive(S,type,no,Date.now());});go('doneArr',{no:v.no});}
+function closeVisit(v,outcome,detail){
+  var x;write(function(){x=C.leave(S,v&&live(v),outcome,detail,Date.now());});
+  go('doneExit',{msg:x.no!=null?t('done_exit',{n:x.no}):t('done_exit_nm'),sub:x.arr?t('time_fc',{d:dur(x.exit-x.arr)}):''});
+}
+var act={
+ go:function(v){go(v);},
+ goKeep:function(v){go(v,{v:ui.ctx.v});},
+ lang:function(){S.cfg.lang=lang()==='en'?'ur':'en';persist();render();},
+ arrive:function(){go('type');},
+ leave:function(){go('pad',{mode:'exit',val:''});},
+ type:function(k){if(S.cfg.idMode==='card')go('pad',{mode:'card',type:k,val:''});else newVisit(k);},
+ returnNo:function(){go('pad',{mode:'returnNo',val:''});},
+ key:function(k){var c=ui.ctx,max=ui.screen==='pin'?4:3;c.bad=false;
+  if(k==='del')c.val=(c.val||'').slice(0,-1);else if((c.val||'').length<max)c.val=(c.val||'')+k;
+  if(ui.screen!=='pin')c.val=c.val.replace(/^0+/,'');render();},
+ padok:function(){var c=ui.ctx,n=+c.val;
+  if(ui.screen==='pin'){if(c.val===S.cfg.pin){ui.draft=null;return go('setup');}return go('pin',{val:'',bad:true});}
+  if(c.mode==='card')return newVisit(c.type,n);
+  var v=C.findOpen(S,n);if(!v)return;
+  if(c.mode==='returnNo'){write(function(){C.stepIn(live(v));});return go('doneExit',{msg:t('done_back',{n:n})});}
+  go(v.status==='out'?'outChoice':'outcome',{v:v});},
+ nono:function(){go('outcome',{v:null});},
+ tile:function(n){var v=C.findOpen(S,+n);if(v)go(v.status==='out'?'outChoice':'outcome',{v:v});},
+ backin:function(){var v=ui.ctx.v;write(function(){C.stepIn(live(v));});go('doneExit',{msg:t('done_back',{n:v.no})});},
+ outleave:function(){go('outcome',{v:ui.ctx.v});},
+ out:function(k){var v=ui.ctx.v;
+  if(k==='yes')return go('service',{v:v});
+  if(k==='no')return go('reason',{v:v});
+  write(function(){C.stepOut(live(v));});go('doneExit',{msg:t('done_out',{n:v.no})});},
+ svc:function(k){closeVisit(ui.ctx.v,'served',k);},
+ reason:function(k){closeVisit(ui.ctx.v,'not_served',k);},
+ undo:undo,
+ closeday:function(){write(function(){C.closeOpen(S,Date.now());});go('summary',{closed:true});upload();},
+ upnow:function(){upload(true);render();},
+ send:function(d){send(d);},
+ settings:function(){go('pin',{val:''});},
+ seg:function(v){var p=v.split('|');ui.draft[p[0]]=p[1];
+  [].forEach.call(document.querySelectorAll('[data-seg="'+p[0]+'"] button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===v));});}
+};
+document.getElementById('app').addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;var f=act[b.getAttribute('data-act')];if(f)f(b.getAttribute('data-v'));
+});
+
+/* ---------- a new day: archive yesterday (open visits become no exit check) ---------- */
+function checkDay(){if(C.rollover(S,Date.now())){persist();go('home');}}
+setInterval(checkDay,60000);
+
+/* ---------- direct upload (only when an upload address is set): changed rows, one request per day ---------- */
+function upload(manual){
+  if(!S.cfg||!S.cfg.upload_url||uploading)return;
+  if(!navigator.onLine){upErr='offline';if(manual||ui.screen==='summary')render();return;}
+  var batches=C.pendingUpload(S);
+  if(!batches.length){S.lastUpload=Date.now();upErr=null;persist();countPending();if(ui.screen==='home'||ui.screen==='summary')render();return;}
+  uploading=true;
+  var chain=Promise.resolve();
+  batches.forEach(function(b){chain=chain.then(function(){
+    var ctl=new AbortController(),tm=setTimeout(function(){ctl.abort();},30000);
+    // text/plain keeps this a simple request (no CORS preflight); the flow parses the JSON
+    return fetch(S.cfg.upload_url,{method:'POST',headers:{'Content-Type':'text/plain'},body:C.payload(S,b),signal:ctl.signal}).then(function(r){
+      clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);C.markUploaded(S,b);persist();});});});
+  chain.then(function(){S.lastUpload=Date.now();upErr=null;},function(e){upErr=e&&e.name==='AbortError'?'timeout':String(e&&e.message||e);})
+    .then(function(){uploading=false;persist();countPending();if(ui.screen==='home'||ui.screen==='summary')render();});
+}
+setInterval(upload,15*60000);
+addEventListener('online',function(){upload();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkDay();});
+checkDay();
+countPending();
+render();
+upload();
+
+if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js');
+})();
+</script>
+</body>
+</html>

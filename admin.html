@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FC visitor data</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* WFP house style, Monitoring and evaluation theme. One accent; status colours only for status. */
+:root{--fg:#000000e9;--fg-2:#000000ab;--fg-muted:#0000008d;--border:#0000001c;--muted:#f8f8f8;
+  --accent:#008442;--accent-text:#006147;--accent-50:#f5faf6;--accent-100:#e8f4eb;--accent-300:#abd6b5;
+  --primary:#0078b8;--primary-700:#005795;--warning-50:#fff8e7;--warning-400:#dea600;--danger-50:#fff7f6;--danger-400:#ff8f89;--danger-700:#ad000c;
+  --font:"Open Sans","Noto Sans",ui-sans-serif,system-ui,sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.6;font-variant-numeric:tabular-nums}
+.page{max-width:960px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.masthead{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:32px;padding:32px 0 24px;border-bottom:1px solid var(--border)}
+.masthead > .context{grid-column:1;grid-row:1}.masthead > h1{grid-column:1;grid-row:2}.masthead > .dek{grid-column:1;grid-row:3}
+.masthead > .logo{grid-column:2;grid-row:2 / span 2;align-self:center;height:64px}
+.context{font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin-bottom:8px}
+.context .key{width:28px;height:5px;background:var(--accent)}.context .office{font-weight:600}.context .unit{color:var(--fg-muted)}
+h1{font-size:30px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:0 0 6px}
+.dek{font-size:18px;color:var(--fg-2);margin:0}
+h2{font-size:24px;font-weight:600;margin:40px 0 8px}
+p{margin:8px 0}
+.drop{display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 16px;border:1px dashed #cccccc;border-radius:8px;background:var(--muted);text-align:center}
+.drop.over{border-color:var(--accent);background:var(--accent-50)}
+.drop small{color:var(--fg-2);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:6px;border:1px solid var(--primary);background:var(--primary);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.btn.line{background:#fff;color:var(--primary-700)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+:focus-visible{outline:3px solid var(--accent-300);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:16px 0}
+.stat{padding:14px 0}.stat + .stat{padding-left:20px;border-left:1px solid var(--border)}
+.stat .value{font-size:30px;font-weight:700;line-height:1.2}.stat.is-key .value{color:var(--accent)}
+.stat .label{font-size:14px;color:var(--fg-2)}
+.alert{border:1px solid #cccccc;background:#00000006;border-radius:6px;padding:12px 16px;font-size:15px;margin:12px 0}
+.alert.warning{border-color:var(--warning-400);background:var(--warning-50)}
+.alert.danger{border-color:var(--danger-400);background:var(--danger-50)}
+.alert-title{font-weight:600;margin-bottom:4px}
+.alert ul{margin:4px 0 0;padding-left:20px}
+.table-title{font-size:14px;font-weight:600;margin:20px 0 6px}
+.table-wrap{overflow-x:auto;border-top:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:12px;font-weight:600;color:var(--fg-2);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td.num,th.num{text-align:right}
+.source{font-size:12px;color:var(--fg-muted);margin-top:6px}
+.steps{padding-left:20px}.steps li{margin:4px 0}
+.page-foot{margin-top:56px;padding-top:12px;border-top:1px solid var(--border);font-size:12.5px;color:var(--fg-muted);line-height:1.55}
+.page-foot .doc-title{color:var(--fg);font-weight:600;font-size:13px}
+.page-foot .status{display:inline-block;margin-left:10px;padding:0 7px;border:1px solid var(--accent-300);border-radius:4px;color:var(--accent-text);font-size:11.5px;line-height:18px}
+[hidden]{display:none!important}
+@media (max-width:640px){.masthead{grid-template-columns:1fr}.masthead > .logo{grid-column:1;grid-row:1;height:44px;margin-bottom:12px}
+  .masthead > .context{grid-row:2}.masthead > h1{grid-row:3}.masthead > .dek{grid-row:4}.stat + .stat{padding-left:12px}}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="masthead">
+    <div class="context"><span class="key"></span><span class="office">WFP Pakistan</span><span>Benazir Nashonuma Programme 3.0</span><span class="unit">Monitoring and evaluation</span></div>
+    <h1>FC visitor data</h1>
+    <p class="dek">Combine the daily files sent from the tablets into one clean Excel or CSV file. The files are read on this computer; nothing is uploaded.</p>
+    <img class="logo" src="logo.png" alt="World Food Programme">
+  </header>
+
+  <h2>Add the daily files</h2>
+  <ol class="steps">
+    <li>Save the files the crowd controllers sent (WhatsApp Web: open each file and save; email: save the attachments) into one folder.</li>
+    <li>Select them all below. Add old and new files together: a day sent twice is counted once.</li>
+  </ol>
+  <label class="drop" id="drop" for="files">
+    <strong>Drop the CSV files here, or choose them</strong>
+    <small>Files named like fc_visits_PB014_T1_2026-11-02.csv</small>
+    <input id="files" type="file" accept=".csv,text/csv" multiple>
+  </label>
+
+  <section id="result" hidden>
+    <h2>Check what was read</h2>
+    <div class="stats" id="stats"></div>
+    <div id="alerts"></div>
+    <div class="table-title">Daily summary by FC</div>
+    <div class="table-wrap"><table id="daily"></table></div>
+    <p class="source">Exit capture: share of arrivals with a recorded outcome. Median minutes: arrival to exit, visits with both times.</p>
+
+    <h2>Download</h2>
+    <p>The Excel file has five sheets: Visits (one row per visit, codes in words), Daily by FC, Reasons, Files and Codebook. The CSV holds the Visits sheet only.</p>
+    <div class="btns">
+      <button class="btn" id="xlsx" type="button">Download Excel (.xlsx)</button>
+      <button class="btn line" id="csv" type="button">Download CSV</button>
+      <button class="btn line" id="clear" type="button">Start again</button>
+    </div>
+  </section>
+
+  <footer class="page-foot">
+    <span class="doc-title">FC visitor data: combine daily files</span><span class="status">Internal</span><br>
+    WFP Pakistan, Implementation Support Unit, BNP 3.0
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="core.js"></script>
+<script>
+(function(){
+'use strict';
+var C=window.Core,L=C.LABELS,loaded={},merged=null,files=[];
+
+/* ---------- reading ---------- */
+function addFiles(list){
+  var jobs=[].map.call(list,function(f){return f.text().then(function(txt){
+    var r=C.readDaily(txt);loaded[f.name]={rows:r.rows,error:r.error};
+    r.rows.forEach(function(x){x._file=f.name;});
+  });});
+  Promise.all(jobs).then(refresh);
+}
+function refresh(){
+  var names=Object.keys(loaded).sort(),all=[];
+  names.forEach(function(n){all=all.concat(loaded[n].rows);});
+  merged=C.merge(all);files=names;
+  var rows=merged.rows,days=C.daily(rows),fcs={},dates={};
+  rows.forEach(function(r){fcs[r.fc_code]=1;dates[r.date]=1;});
+  document.getElementById('result').hidden=!names.length;
+  document.getElementById('stats').innerHTML=[
+    ['is-key',rows.length.toLocaleString('en-GB'),'Visits'],['',Object.keys(fcs).length,'FCs'],
+    ['',Object.keys(dates).length,'Days'],['',names.length,'Files read']].map(function(s){
+    return '<div class="stat '+s[0]+'"><div class="value">'+s[1]+'</div><div class="label">'+s[2]+'</div></div>';}).join('');
+
+  var bad=names.filter(function(n){return loaded[n].error;}),open=days.filter(function(d){return d.still_open;}),a='';
+  if(bad.length)a+='<div class="alert danger"><div class="alert-title">'+bad.length+' file'+(bad.length>1?'s':'')+' skipped</div><ul>'+bad.map(function(n){return '<li>'+esc(n)+': '+loaded[n].error+'</li>';}).join('')+'</ul></div>';
+  if(open.length)a+='<div class="alert warning"><div class="alert-title">Days not closed on the tablet</div><p>These visits had no outcome when the file was sent. Ask the FC to close the day and send the file again, or keep them as open.</p><ul>'+
+    open.map(function(d){return '<li>'+esc(d.fc_code)+', '+d.date+': '+d.still_open+' still open</li>';}).join('')+'</ul></div>';
+  if(merged.dropped)a+='<div class="alert"><p>'+merged.dropped+' visit rows were in more than one file (a day sent twice). Each visit is kept once, in its most complete version.</p></div>';
+  document.getElementById('alerts').innerHTML=a;
+
+  var cols=[['date','Date'],['fc_code','FC code'],['fc_name','FC name'],['arrived','Arrived',1],['served','Served',1],['not_served','Not served',1],['no_exit','No exit check',1],['still_open','Still open',1],['exit_capture_pct','Exit capture %',1],['median_minutes_at_fc','Median minutes',1],['peak_hour','Peak hour']];
+  document.getElementById('daily').innerHTML='<thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+'>'+c[1]+'</th>';}).join('')+'</tr></thead><tbody>'+
+    days.map(function(d){return '<tr>'+cols.map(function(c){var v=d[c[0]];return '<td'+(c[2]?' class="num"':'')+'>'+(v==null?'–':esc(v))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- clean output ---------- */
+var COLS=[
+ ['visit_id','Visit ID','Unique ID: FC, date, tablet, visit type, arrival time, visitor number (U and exit time when the visitor had no number)'],
+ ['date','Date','Day of the visit'],
+ ['fc_code','FC code','Facilitation centre code set on the tablet'],
+ ['fc_name','FC name','Facilitation centre name set on the tablet'],
+ ['tablet','Tablet','Tablet number at the FC (tablet 2 gives numbers from 501)'],
+ ['number','Visitor number','Number given at arrival; blank when the visitor had no number at exit'],
+ ['visitor_type','Visit type','Asked at arrival: new registration, follow-up visit, referred here, only information'],
+ ['arrival_time','Arrival time','T0, saved by the tablet when Arriving was tapped'],
+ ['exit_time','Exit time','T2, saved when the exit questions were answered; blank for no exit check'],
+ ['minutes_at_fc','Minutes at FC','Exit time minus arrival time, visits with both times'],
+ ['outcome','Outcome','Served, not served, or no exit check (still open when the day was closed)'],
+ ['service','Service received','When served: registered (new), follow-up done, information or counselling, referred elsewhere'],
+ ['reason_group','Reason group','When not served: eligibility or FC operations'],
+ ['reason','Reason','When not served: the main reason given by the visitor'],
+ ['times_out','Times out and back','How often the visitor went out (for example to the medical outpost) and came back'],
+ ['exit_matched','Exit matched to arrival','No when the visitor had no number at exit, so there is no arrival time'],
+ ['closed_by_app','Closed by app','Yes when Close the day, or midnight, closed the visit'],
+ ['status','Visit status','Closed, or inside or out when the file was sent before the day was closed'],
+ ['app_version','App version','Version of the tablet app that wrote the row'],
+ ['_file','Source file','The daily file the row came from']];
+function yn(v){return v==='true'?'Yes':v==='false'?'No':'';}
+function label(k,v){return k==='exit_matched'||k==='closed_by_app'?yn(v):(L[k]&&L[k][v])||v;}
+function serialDate(s){var p=s.split('-');return Date.UTC(+p[0],+p[1]-1,+p[2])/86400000+25569;}
+function serialTime(s){var p=s.split(':');return (+p[0])/24+(+p[1])/1440;}
+
+function visitsAoA(forExcel){
+  var out=[COLS.map(function(c){return c[1];})];
+  merged.rows.forEach(function(r){out.push(COLS.map(function(c){var k=c[0],v=r[k];
+    if(!forExcel)return label(k,v);
+    if(v==='')return null;
+    if(k==='date')return {t:'n',v:serialDate(v),z:'yyyy-mm-dd'};
+    if(k==='arrival_time'||k==='exit_time')return {t:'n',v:serialTime(v),z:'hh:mm'};
+    if(k==='tablet'||k==='number'||k==='minutes_at_fc'||k==='times_out')return +v;
+    return label(k,v);}));});
+  return out;
+}
+function sheet(aoa,widths){var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=widths.map(function(w){return {wch:w};});
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:aoa[0].length-1}})};return ws;}
+function range(){var d=merged.rows.map(function(r){return r.date;}).sort();return d.length?d[0]+'_to_'+d[d.length-1]:'empty';}
+
+function downloadXLSX(){
+  var wb=XLSX.utils.book_new(),days=C.daily(merged.rows);
+  XLSX.utils.book_append_sheet(wb,sheet(visitsAoA(true),[34,11,9,22,7,9,18,9,9,9,14,24,14,32,9,10,9,12,8,36]),'Visits');
+  var dh=['Date','FC code','FC name','Arrived','Served','Not served','No exit check','Still open','Exit capture %','Median minutes at FC','Peak arrival hour'];
+  XLSX.utils.book_append_sheet(wb,sheet([dh].concat(days.map(function(d){return [{t:'n',v:serialDate(d.date),z:'yyyy-mm-dd'},d.fc_code,d.fc_name,d.arrived,d.served,d.not_served,d.no_exit,d.still_open,d.exit_capture_pct,d.median_minutes_at_fc,d.peak_hour];})),[11,9,22,9,9,10,12,9,13,18,16]),'Daily by FC');
+  var rc={};merged.rows.forEach(function(r){if(r.outcome!=='not_served')return;var k=[r.fc_code,r.fc_name,r.reason_group,r.reason].join('\u0001');rc[k]=(rc[k]||0)+1;});
+  var rr=Object.keys(rc).map(function(k){var p=k.split('\u0001');return [p[0],p[1],label('reason_group',p[2]),label('reason',p[3]),rc[k]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:b[4]-a[4];});
+  XLSX.utils.book_append_sheet(wb,sheet([['FC code','FC name','Reason group','Reason','Visits not served']].concat(rr),[9,22,14,36,16]),'Reasons');
+  var fr=files.map(function(n){var f=loaded[n],r=f.rows[0]||{};return [n,r.fc_code||'',r.tablet?+r.tablet:'',r.date||'',f.rows.length,f.error||''];});
+  XLSX.utils.book_append_sheet(wb,sheet([['File','FC code','Tablet','Date','Rows','Problem']].concat(fr),[40,9,7,11,7,40]),'Files');
+  XLSX.utils.book_append_sheet(wb,sheet([['Column in Visits','Meaning']].concat(COLS.map(function(c){return [c[1],c[2]];})),[24,90]),'Codebook');
+  XLSX.writeFile(wb,'fc_visits_'+range()+'.xlsx',{compression:true});
+}
+function downloadCSV(){
+  var csv=visitsAoA(false).map(function(r){return r.map(function(x){x=x==null?'':String(x);return /[",\r\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;}).join(',');}).join('\r\n')+'\r\n';
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));a.download='fc_visits_'+range()+'.csv';document.body.appendChild(a);a.click();a.remove();
+}
+
+/* ---------- wiring ---------- */
+var drop=document.getElementById('drop'),input=document.getElementById('files');
+input.addEventListener('change',function(){addFiles(input.files);input.value='';});
+['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add('over');});});
+['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove('over');});});
+drop.addEventListener('drop',function(ev){addFiles(ev.dataTransfer.files);});
+document.getElementById('xlsx').addEventListener('click',downloadXLSX);
+document.getElementById('csv').addEventListener('click',downloadCSV);
+document.getElementById('clear').addEventListener('click',function(){loaded={};refresh();});
+if(!window.XLSX){var b=document.getElementById('xlsx');b.disabled=true;b.title='Excel needs an internet connection the first time';}
+})();
+</script>
+</body>
+</html>

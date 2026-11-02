@@ -1,7 +1,7 @@
 /* FC visitor register: data rules with no screen code, so they can be tested with `node core.test.js`. */
 (function (root) {
   'use strict';
-  var VERSION = '1.2.0';
+  var VERSION = '1.3.0';
   var ELIG = ['not_elig', 'pmt', 'docs', 'dup', 'criteria'];
   var OPS = ['system', 'crowd', 'staff', 'food', 'another_day', 'left'];
   var KEEP_DAYS = 30;

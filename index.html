@@ -272,6 +272,8 @@ P.reg=P.N;P.fu=P.F;P.ref=P.R;P.info=P.I;
 function ic(n,cls){return '<svg class="i '+(cls||'')+'" viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>';}
 
 /* ---------- state and saving ---------- */
+// SHA-256 of 'fcvr:' + the access code (capitals, no spaces or dash). The code itself is kept by ISU, not here.
+var ACCESS_HASH='8df1a7dd78541e83fff3fa96851301626ab83e5074724f4d3a9ec147863ab4ed';
 var S=C.emptyState(Date.now()), ui={screen:'home',ctx:{}}, undoSnap=null, timer=null, saveFailed=false, uploading=false, upErr=null, pendingN=0;
 try{var saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)S=saved;}catch(e){saveFailed=true;}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));saveFailed=false;}catch(e){saveFailed=true;}}
@@ -314,6 +316,7 @@ var screens={
   return '<main class="main" dir="ltr" lang="en-GB" style="font-family:var(--font)">'+(S.cfg?backBtn('summary'):'')+
    '<h2 class="q">Set up this tablet</h2><p class="hint">For the FC supervisor. Done once per tablet; the crowd controller does not need this screen.</p>'+
    '<form class="form" id="setup" autocomplete="off">'+
+   (S.cfg?'':'<div class="field"><label for="f-acc">Access code</label><small>From ISU. Asked only the first time this tablet is set up.</small><input id="f-acc" name="access" required autocapitalize="characters" spellcheck="false" value="'+esc(c.access||'')+'"></div>')+
    '<div class="field"><label for="f-code">FC code</label><small>As used in BNP reports, for example PB014</small><input id="f-code" name="fc_code" required maxlength="12" value="'+esc(c.fc_code)+'"></div>'+
    '<div class="field"><label for="f-name">FC name</label><small>Shown at the top of every screen</small><input id="f-name" name="fc_name" required maxlength="40" value="'+esc(c.fc_name)+'"></div>'+
    '<div class="field"><label for="f-tab">Tablet number at this FC</label><small>1 for the first tablet. Tablet 2 gives numbers from 501, so numbers never repeat.</small><input id="f-tab" name="tablet" type="number" inputmode="numeric" min="1" max="9" required value="'+esc(c.tablet)+'"></div>'+
@@ -463,6 +466,15 @@ function saveSetup(e){
   if(!/^\d{4}$/.test(d.pin))return go('setup',{err:'The PIN must be 4 digits.'});
   d.upload_url=String(fd.get('upload_url')||'').trim();
   if(d.upload_url&&!/^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(d.upload_url))return go('setup',{err:'The upload address must start with https://'});
+  if(S.cfg)return finishSetup(d);
+  d.access=String(fd.get('access')||'');
+  if(!(window.crypto&&crypto.subtle))return go('setup',{err:'Open the app from its https link to set it up.'});
+  crypto.subtle.digest('SHA-256',new TextEncoder().encode('fcvr:'+d.access.toUpperCase().replace(/[^A-Z0-9]/g,''))).then(function(b){
+    var h=Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+    if(h!==ACCESS_HASH)return go('setup',{err:'Wrong access code. Ask ISU for it.'});
+    delete d.access;finishSetup(d);});
+}
+function finishSetup(d){
   S.cfg=d;ui.draft=null;persist();countPending();upload();
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
   go('home');

@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION whenever index.html or core.js changes, so tablets pick up the new files.
-const VERSION = 'fcvr-1.2.0';
+const VERSION = 'fcvr-1.3.0';
 const SHELL = ['./', 'index.html', 'core.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));

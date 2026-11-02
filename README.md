@@ -1,4 +1,4 @@
-# FC visitor register (pilot app, v1.2.0)
+# FC visitor register (pilot app, v1.3.0)
 
 Android tablet app for crowd controllers at BNP facilitation centres. It records when each visitor
 arrives, when they leave, and whether they were served (and if not, why). Design and reasons:
@@ -41,7 +41,7 @@ Check with IT before the pilot.
 
 1. Open the app link in Chrome, with internet.
 2. Chrome menu, **Install app** (or **Add to Home screen**).
-3. Open it from the home screen and fill in **Set up this tablet**: FC code, FC name,
+3. Open it from the home screen and fill in **Set up this tablet**: the access code from ISU (asked only the first time), FC code, FC name,
    tablet number (1 unless the FC has a second tablet), language, home screen, visitor number
    option and a 4-digit supervisor PIN.
 4. In Chrome settings, keep "Clear browsing data" away from this tablet: clearing site data deletes unsent records.

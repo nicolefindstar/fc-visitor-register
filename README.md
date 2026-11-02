@@ -15,7 +15,7 @@ Set-up for both: `../04_Deployment/FC_visitor_app_setup_guide.html`.
 | File | What it does |
 |---|---|
 | `index.html` | All screens, English and Urdu (Urdu is a draft for native proofreading) |
-| `admin.html` | For the app master: combines the daily files into one clean Excel or CSV |
+| `admin.html` | For the app master: combines the daily files into one clean Excel or CSV. Kept in the ISU folder only, never put online |
 | `core.js` | Data rules: numbering, visits, end of day, CSV, change-only upload batches, and reading and merging files for `admin.html` |
 | `core.test.js` | Check for `core.js`: `node core.test.js` |
 | `sw.js` | Offline cache. **Bump `VERSION` after any change**, or tablets keep the old version |
@@ -63,7 +63,7 @@ Settings can be changed later from **End of day, Tablet settings** with the PIN.
    (attachments save in one go); a WhatsApp group also works (WhatsApp Web, save each file).
 2. Save all the files into one folder, for example `01_BNP/02_Data/FC_visitors/raw/`. Keep everything;
    a day sent twice does no harm.
-3. Open https://nicolefindstar.github.io/fc-visitor-register/admin.html, select all the files.
+3. Open `admin.html` from the ISU copy of the app folder (double-click; it needs internet for the Excel library), select all the files.
    The page reads them on your computer (nothing is uploaded), shows a daily summary by FC and flags
    files that are not visitor files and days that were not closed on the tablet.
 4. Download **Excel** (sheets: Visits, Daily by FC, Reasons, Files, Codebook) or **CSV** (the Visits sheet).

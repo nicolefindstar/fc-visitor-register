@@ -15,6 +15,7 @@ Set-up for both: `../04_Deployment/FC_visitor_app_setup_guide.html`.
 | File | What it does |
 |---|---|
 | `index.html` | All screens, English and Urdu (Urdu is a draft for native proofreading) |
+| `demo.html` | Click-through demo on a made-up FC with made-up visits, for showing the app; no access code, nothing is sent. Built from `index.html` by `02_Work/build_demo.py` |
 | `admin.html` | For the app master: combines the daily files into one clean Excel or CSV. Kept in the ISU folder only, never put online |
 | `core.js` | Data rules: numbering, visits, end of day, CSV, change-only upload batches, and reading and merging files for `admin.html` |
 | `core.test.js` | Check for `core.js`: `node core.test.js` |

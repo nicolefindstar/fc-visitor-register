@@ -157,7 +157,9 @@ h2.q{font-size:26px;line-height:1.3;margin:4px 0 0;font-weight:700}
 body{background:#f1f1f1}
 .demo-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:#fff8e7;border-bottom:1px solid #dea600;font-size:14px;color:#7d4800}
 .demo-bar span{flex:1}
-.demo-bar button,.guide button{min-height:36px;padding:4px 12px;border:1px solid #cccccc;border-radius:6px;background:#fff;font-size:14px}
+.demo-bar button,.guide button.link{min-height:36px;padding:6px 0;border:0;background:none;font-size:14px;font-weight:600;color:#005795;cursor:pointer}
+.demo-bar button:hover,.guide button.link:hover{text-decoration:underline;text-underline-offset:3px}
+.demo-bar button{color:#7d4800}
 .guide{display:none}
 .stage{height:calc(100% - 53px)}
 .stage .app{background:#fff}
@@ -192,8 +194,8 @@ body{background:#f1f1f1}
     <li><b>Urdu.</b> Tap اردو at the top to switch language.</li>
   </ol>
   <p class="note">No names, CNICs or phone numbers are collected. Visits are made up and stay in this browser. Send marks the day as sent, but in the demo no file leaves the page.</p>
-  <button type="button" onclick="demoReset()">Start the demo again</button>
-  <p class="gfoot">FC visitor app: demo <span class="status">Draft for review</span><br>WFP Pakistan, Implementation Support Unit, BNP 3.0, 17 November 2026<br>Contact: Nicole Wu, Programme Policy Officer (Data Analyst), <a href="mailto:nicole.wu@wfp.org">nicole.wu@wfp.org</a></p>
+  <button class="link" type="button" onclick="demoReset()">Start the demo again</button>
+  <p class="gfoot">FC visitor app: demo <span class="status">Draft for review</span><br>WFP Pakistan, Implementation Support Unit, BNP 3.0, 18 November 2026<br>Contact: Nicole Wu, Programme Policy Officer (Data Analyst), <a href="mailto:nicole.wu@wfp.org">nicole.wu@wfp.org</a></p>
 </aside>
 <div class="app" id="app" aria-live="polite"></div>
 </div>

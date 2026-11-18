@@ -77,4 +77,19 @@ C.rollover(s3, T0 + 24 * 60 * MIN);                                     // u2 cl
 p = C.pendingUpload(s3);
 assert.deepStrictEqual([p.length, p[0].day, p[0].rows[0].outcome], [1, '2026-11-02', 'no_exit']);
 
+// turned away at the gate: counted as arrived and not served, kept out of exit capture and time at FC
+const s4 = C.emptyState(T0); s4.cfg = { fc_code: 'PB014', fc_name: 'Lahore', tablet: 1 };
+const g1 = C.arrive(s4, 'N', null, T0); C.leave(s4, g1, 'served', 'reg', T0 + 40 * MIN);
+C.turnAway(s4, 'N', 'not_elig', T0 + 5 * MIN); C.turnAway(s4, 'F', 'crowd', T0 + 6 * MIN);
+st = C.stats(s4.visits);
+assert.deepStrictEqual([st.arrived, st.served, st.notServed, st.gate, st.capture, st.medianMs, st.open], [3, 1, 2, 2, 100, 40 * MIN, 0]);
+const gcsv = C.toCSV(s4.cfg, s4.day, s4.visits), grows = C.readDaily(gcsv).rows;
+assert.ok(/_G\d{6}$/.test(grows[1].visit_id) && grows[1].turned_away === 'true' && grows[0].turned_away === 'false');
+assert.deepStrictEqual([grows[1].reason_group, grows[1].minutes_at_fc, grows[1].number], ['eligibility', '0', '']);
+const gd = C.daily(grows)[0];
+assert.deepStrictEqual([gd.arrived, gd.served, gd.not_served, gd.turned_away, gd.exit_capture_pct, gd.median_minutes_at_fc], [3, 1, 2, 2, 100, 40]);
+// a file from version 1.3.0 (no turned_away column) still reads
+const oldFile = gcsv.split('\r\n').map(l => l.replace(/,(true|false|turned_away)$/, '')).join('\r\n');
+assert.ok(!C.readDaily(oldFile).error);
+
 console.log('core.test.js: all checks passed');

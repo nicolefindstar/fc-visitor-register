@@ -91,6 +91,8 @@ Put all files in one folder and load it with Power BI's Folder connector or Exce
 | `times_out` | How often they went out and came back |
 | `exit_matched` | false when the visitor had no number at exit |
 | `closed_by_app` | true when Close the day (or midnight) closed the visit |
+| `app_version` | version of the tablet app that wrote the row |
+| `turned_away` | true when the crowd controller sent the visitor back at the gate without a number (from 1.4.0) |
 
 No names, CNICs or phone numbers are collected.
 

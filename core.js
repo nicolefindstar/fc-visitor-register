@@ -1,7 +1,7 @@
 /* FC visitor register: data rules with no screen code, so they can be tested with `node core.test.js`. */
 (function (root) {
   'use strict';
-  var VERSION = '1.3.0';
+  var VERSION = '1.4.0';
   var ELIG = ['not_elig', 'pmt', 'docs', 'dup', 'criteria'];
   var OPS = ['system', 'crowd', 'staff', 'food', 'another_day', 'left'];
   var KEEP_DAYS = 30;
@@ -25,6 +25,12 @@
   function arrive(state, type, no, now) {
     if (no == null) { no = state.seq ? state.seq + 1 : firstNumber(state.cfg && state.cfg.tablet); state.seq = no; }
     var v = { no: no, type: type, arr: now, exit: null, status: 'in', outcome: null, service: null, reason: null, outs: 0, matched: true, auto: false };
+    state.visits.push(v);
+    return v;
+  }
+  // Turned away at the gate before getting a number: arrival and exit at the same moment, not served, with the reason.
+  function turnAway(state, type, reason, now) {
+    var v = { no: null, type: type, arr: now, exit: now, status: 'closed', outcome: 'not_served', service: null, reason: reason, outs: 0, matched: false, auto: false, gate: true };
     state.visits.push(v);
     return v;
   }
@@ -62,18 +68,18 @@
 
   function visitId(cfg, day, v) {
     var t = v.arr || v.exit;
-    // a visitor with no number gets U + exit time to the second, so two such exits at one FC do not share an ID
-    var tail = v.no != null ? String(v.no).padStart(3, '0') : 'U' + hhmm(v.exit).replace(':', '') + pad2(new Date(v.exit).getSeconds());
+    // a visitor with no number gets U (no number at exit) or G (turned away at the gate) + exit time to the second
+    var tail = v.no != null ? String(v.no).padStart(3, '0') : (v.gate ? 'G' : 'U') + hhmm(v.exit).replace(':', '') + pad2(new Date(v.exit).getSeconds());
     return [cfg.fc_code, day.replace(/-/g, ''), 'T' + cfg.tablet, v.type || 'X', t ? hhmm(t).replace(':', '') : '0000', tail].join('_');
   }
 
   var HEAD = ['visit_id', 'fc_code', 'fc_name', 'tablet', 'date', 'number', 'visitor_type', 'arrival_time', 'exit_time', 'minutes_at_fc',
-    'status', 'outcome', 'service', 'reason_group', 'reason', 'times_out', 'exit_matched', 'closed_by_app', 'app_version'];
+    'status', 'outcome', 'service', 'reason_group', 'reason', 'times_out', 'exit_matched', 'closed_by_app', 'app_version', 'turned_away'];
   function cell(x) { x = x == null ? '' : String(x); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }
   function rowValues(cfg, day, v) {
     var mins = v.arr && v.exit ? Math.round((v.exit - v.arr) / 60000) : '';
     return [visitId(cfg, day, v), cfg.fc_code, cfg.fc_name, cfg.tablet, day, v.no, v.type, v.arr ? hhmm(v.arr) : '', v.exit ? hhmm(v.exit) : '', mins,
-      v.status, v.outcome, v.service, v.reason ? reasonGroup(v.reason) : '', v.reason, v.outs, v.matched, v.auto, VERSION];
+      v.status, v.outcome, v.service, v.reason ? reasonGroup(v.reason) : '', v.reason, v.outs, v.matched, v.auto, VERSION, !!v.gate];
   }
   function toCSV(cfg, day, visits) {
     var rows = visits.map(function (v) { return rowValues(cfg, day, v).map(cell).join(','); });
@@ -110,16 +116,17 @@
   function stats(visits) {
     var arr = visits.filter(function (v) { return v.arr; });
     var by = function (o) { return visits.filter(function (v) { return v.outcome === o; }).length; };
-    var times = arr.filter(function (v) { return v.exit; }).map(function (v) { return v.exit - v.arr; }).sort(function (a, b) { return a - b; });
+    var inside = arr.filter(function (v) { return !v.gate; });
+    var times = inside.filter(function (v) { return v.exit; }).map(function (v) { return v.exit - v.arr; }).sort(function (a, b) { return a - b; });
     var hours = {}, reasons = {};
     arr.forEach(function (v) { var h = new Date(v.arr).getHours(); hours[h] = (hours[h] || 0) + 1; });
     visits.forEach(function (v) { if (v.reason) reasons[v.reason] = (reasons[v.reason] || 0) + 1; });
     var served = by('served'), notServed = by('not_served');
     return {
-      arrived: arr.length, served: served, notServed: notServed, noExit: by('no_exit'),
+      arrived: arr.length, served: served, notServed: notServed, noExit: by('no_exit'), gate: arr.length - inside.length,
       open: visits.filter(isOpen).length,
       medianMs: times.length ? times[Math.floor(times.length / 2)] : null,
-      capture: arr.length ? Math.round(arr.filter(function (v) { return v.outcome === 'served' || v.outcome === 'not_served'; }).length / arr.length * 100) : null,
+      capture: inside.length ? Math.round(inside.filter(function (v) { return v.outcome === 'served' || v.outcome === 'not_served'; }).length / inside.length * 100) : null,
       hours: hours, reasons: reasons
     };
   }
@@ -128,6 +135,7 @@
   var LABELS = {
     visitor_type: { N: 'New registration', F: 'Follow-up visit', R: 'Referred here', I: 'Only information' },
     status: { in: 'Inside', out: 'Out, coming back', closed: 'Closed' },
+    turned_away: { true: 'Yes', false: 'No' },
     outcome: { served: 'Served', not_served: 'Not served', no_exit: 'No exit check' },
     service: { reg: 'Registered (new)', fu: 'Follow-up done', info: 'Information or counselling', ref: 'Referred elsewhere' },
     reason_group: { eligibility: 'Eligibility', operations: 'FC operations', other: 'Other' },
@@ -154,7 +162,8 @@
   // One daily file: rows keyed by the header, or an error when it is not a visitor file.
   function readDaily(text) {
     var t = parseCSV(text);
-    if (!t.length || t[0].join(',') !== HEAD.join(',')) return { rows: [], error: 'Not an FC visitor file: the first line does not match' };
+    var old = HEAD.slice(0, -1).join(',');   // files from version 1.3.0 and earlier have no turned_away column
+    if (!t.length || (t[0].join(',') !== HEAD.join(',') && t[0].join(',') !== old)) return { rows: [], error: 'Not an FC visitor file: the first line does not match' };
     return { rows: t.slice(1).map(function (r) { var o = {}; HEAD.forEach(function (h, i) { o[h] = r[i] == null ? '' : r[i]; }); return o; }) };
   }
 
@@ -182,8 +191,9 @@
     var g = {};
     rows.forEach(function (r) {
       var k = r.date + '|' + r.fc_code;
-      var d = g[k] || (g[k] = { date: r.date, fc_code: r.fc_code, fc_name: r.fc_name, arrived: 0, served: 0, not_served: 0, no_exit: 0, still_open: 0, captured: 0, mins: [], hours: {} });
+      var d = g[k] || (g[k] = { date: r.date, fc_code: r.fc_code, fc_name: r.fc_name, arrived: 0, served: 0, not_served: 0, turned_away: 0, no_exit: 0, still_open: 0, captured: 0, mins: [], hours: {} });
       if (r.arrival_time) { d.arrived++; var h = r.arrival_time.slice(0, 2); d.hours[h] = (d.hours[h] || 0) + 1; }
+      if (r.turned_away === 'true') { d.turned_away++; d.not_served++; return; }   // counted, but not in exit capture or time at FC
       if (r.outcome === 'served') d.served++; else if (r.outcome === 'not_served') d.not_served++;
       else if (r.outcome === 'no_exit') d.no_exit++; else d.still_open++;
       if (r.arrival_time && (r.outcome === 'served' || r.outcome === 'not_served')) d.captured++;
@@ -192,13 +202,14 @@
     return Object.keys(g).sort().map(function (k) {
       var d = g[k], peak = Object.keys(d.hours).sort(function (a, b) { return d.hours[b] - d.hours[a] || (a < b ? -1 : 1); })[0];
       return { date: d.date, fc_code: d.fc_code, fc_name: d.fc_name, arrived: d.arrived, served: d.served, not_served: d.not_served,
-        no_exit: d.no_exit, still_open: d.still_open, exit_capture_pct: d.arrived ? Math.round(d.captured / d.arrived * 100) : null,
+        no_exit: d.no_exit, still_open: d.still_open, turned_away: d.turned_away,
+        exit_capture_pct: d.arrived - d.turned_away ? Math.round(d.captured / (d.arrived - d.turned_away) * 100) : null,
         median_minutes_at_fc: median(d.mins), peak_hour: peak ? peak + ':00' : '' };
     });
   }
 
   root.Core = { VERSION: VERSION, ELIG: ELIG, OPS: OPS, pad2: pad2, dayKey: dayKey, hhmm: hhmm, emptyState: emptyState, firstNumber: firstNumber,
-    isOpen: isOpen, findOpen: findOpen, arrive: arrive, stepOut: stepOut, stepIn: stepIn, leave: leave, closeOpen: closeOpen,
+    isOpen: isOpen, findOpen: findOpen, arrive: arrive, turnAway: turnAway, stepOut: stepOut, stepIn: stepIn, leave: leave, closeOpen: closeOpen,
     rollover: rollover, visitId: visitId, toCSV: toCSV, stats: stats, reasonGroup: reasonGroup,
     pendingUpload: pendingUpload, markUploaded: markUploaded, payload: payload,
     HEAD: HEAD, LABELS: LABELS, parseCSV: parseCSV, readDaily: readDaily, merge: merge, median: median, daily: daily };

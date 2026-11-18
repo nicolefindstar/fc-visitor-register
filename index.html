@@ -123,6 +123,8 @@ h2.q{font-size:26px;line-height:1.3;margin:4px 0 0;font-weight:700}
 .sumgrid{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border)}
 .sumgrid div{padding:12px 8px 12px 0;border-bottom:1px solid var(--border)}
 .sumgrid b{display:block;font-size:28px;line-height:1.15}
+.sumgrid .key b{color:var(--primary-700)}
+.wide.gate{margin-top:10px;color:var(--fg-2)}
 .sumgrid span{font-size:14px;color:var(--fg-2)}
 .bars{display:grid;gap:6px;font-size:14px}
 .bars .r{display:grid;grid-template-columns:56px 1fr 34px;gap:8px;align-items:center}
@@ -190,7 +192,7 @@ en:{
  q_reason:'What is the main reason?', g_elig:'Eligibility', g_ops:'FC operations',
  r_not_elig:'Not eligible', r_pmt:'PMT, NSER or Kafaalat issue', r_docs:'Documents missing', r_dup:'Already registered', r_criteria:'Pregnancy or child age criteria not met',
  r_system:'System or internet down', r_crowd:'Too many people today', r_staff:'Staff not available', r_food:'Food not available', r_another_day:'Told to come another day', r_left:'Left before their turn', r_other:'Other reason',
- done_exit:'Visit {n} closed', done_exit_nm:'Exit recorded', done_out:'Number {n} is out. They keep the number.', done_back:'Welcome back, number {n}',
+ done_exit:'Visit {n} closed', done_exit_nm:'Exit recorded', gate:'Turned away at the gate', gate_s:'Sent back without a number', h_gate:'Then choose the main reason they were sent back.', q_reason_gate:'Why were they sent back?', done_gate:'Counted: turned away at the gate', s_gate:'{n} at the gate', done_out:'Number {n} is out. They keep the number.', done_back:'Welcome back, number {n}',
  time_fc:'Time at FC: {d}', out_q:'Number {n} went out earlier today', out_back:'Back inside now', out_leave:'Leaving for good',
  b_inside:'Inside now', b_inside_h:'Tap a number when that person leaves', b_out:'Out, coming back today', b_none:'Nobody here yet',
  sum_t:'Today so far', s_arr:'Arrived', s_served:'Served', s_not:'Not served', s_open:'Still open', s_noexit:'No exit check', s_med:'Typical time at FC', s_cap:'Exits recorded',
@@ -232,7 +234,7 @@ ur:{
  q_reason:'سروس نہ ملنے کی بنیادی وجہ کیا ہے؟', g_elig:'اہلیت سے متعلق', g_ops:'مرکز کے انتظام سے متعلق',
  r_not_elig:'اہل نہیں', r_pmt:'پی ایم ٹی، این ایس ای آر یا کفالت کا مسئلہ', r_docs:'کاغذات مکمل نہیں', r_dup:'پہلے سے رجسٹرڈ', r_criteria:'حمل یا بچے کی عمر کی شرط پوری نہیں',
  r_system:'سسٹم یا انٹرنیٹ بند', r_crowd:'آج رش بہت زیادہ تھا', r_staff:'عملہ موجود نہیں', r_food:'خوراک دستیاب نہیں', r_another_day:'کسی اور دن آنے کا کہا گیا', r_left:'باری سے پہلے چلے گئے', r_other:'کوئی اور وجہ',
- done_exit:'وزٹ {n} مکمل', done_exit_nm:'روانگی درج ہو گئی', done_out:'نمبر {n} باہر گئے ہیں۔ نمبر ان کے پاس رہے گا۔', done_back:'خوش آمدید، نمبر {n}',
+ done_exit:'وزٹ {n} مکمل', done_exit_nm:'روانگی درج ہو گئی', gate:'گیٹ سے واپس بھیجا گیا', gate_s:'نمبر دیے بغیر واپس بھیجا', h_gate:'پھر واپس بھیجنے کی بنیادی وجہ منتخب کریں۔', q_reason_gate:'انہیں واپس کیوں بھیجا گیا؟', done_gate:'درج ہو گیا: گیٹ سے واپس بھیجا گیا', s_gate:'ان میں سے {n} گیٹ سے', done_out:'نمبر {n} باہر گئے ہیں۔ نمبر ان کے پاس رہے گا۔', done_back:'خوش آمدید، نمبر {n}',
  time_fc:'مرکز میں وقت: {d}', out_q:'نمبر {n} آج پہلے باہر گئے تھے', out_back:'اب واپس اندر آ گئے', out_leave:'اب گھر جا رہے ہیں',
  b_inside:'اس وقت اندر', b_inside_h:'جو جا رہا ہو، اس کا نمبر دبائیں', b_out:'باہر گئے، آج واپس آئیں گے', b_none:'ابھی کوئی نہیں آیا',
  sum_t:'آج اب تک', s_arr:'آمد', s_served:'سروس ملی', s_not:'سروس نہیں ملی', s_open:'ابھی کھلے', s_noexit:'روانگی درج نہیں', s_med:'مرکز میں عام وقت', s_cap:'روانگی درج ہوئی',
@@ -335,21 +337,24 @@ var screens={
   if(S.cfg.layout!=='B') return topbar()+'<main class="main">'+counts()+
    '<button class="big arrive" data-act="arrive">'+ic('in','flip')+'<span><strong>'+t('arrive')+'</strong><small>'+t('arrive_s')+'</small></span></button>'+
    '<button class="big leave" data-act="leave">'+ic('out','flip')+'<span><strong>'+t('leave')+'</strong><small>'+t('leave_s')+'</small></span></button>'+
+   '<button class="wide gate" data-act="gate">'+ic('x')+t('gate')+'</button>'+
    '<p class="homehint">'+t('home_hint')+'</p></main>'+foot();
   var now=Date.now(),ins=open().filter(function(v){return v.status==='in';}).sort(function(a,b){return a.no-b.no;}),outs=open().filter(function(v){return v.status==='out';});
   function tile(v){var w=now-v.arr;return '<button class="tile'+(v.status==='out'?' out':w>3*3600000?' long':'')+'" data-act="tile" data-v="'+v.no+'" aria-label="'+v.no+'"><b class="ltr">'+v.no+'</b><span class="ltr">'+C.hhmm(v.arr)+'</span><span>'+dur(w)+'</span></button>';}
   return topbar()+'<main class="main">'+counts()+
    '<div class="row2"><button class="big arrive" data-act="arrive">'+ic('in','flip')+'<span><strong>'+t('arrive')+'</strong></span></button>'+
    '<button class="big leave" data-act="leave">'+ic('hash')+'<span><strong>'+t('leave')+'</strong></span></button></div>'+
+   '<button class="wide gate" data-act="gate">'+ic('x')+t('gate')+'</button>'+
    '<div class="board-h">'+t('b_inside')+' ('+ins.length+')<span>'+t('b_inside_h')+'</span></div>'+
    (ins.length?'<div class="tiles">'+ins.map(tile).join('')+'</div>':'<div class="empty">'+t('b_none')+'</div>')+
    (outs.length?'<div class="board-h">'+t('b_out')+' ('+outs.length+')</div><div class="tiles">'+outs.map(tile).join('')+'</div>':'')+
    '</main>'+foot();
  },
  type:function(){
-  return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('q_type')+'</h2><p class="hint">'+t('h_type')+'</p>'+
+  var g=ui.ctx.gate;
+  return topbar()+'<main class="main">'+backBtn()+(g?'<div class="vnum">'+t('gate')+'</div>':'')+'<h2 class="q">'+t('q_type')+'</h2><p class="hint">'+t(g?'h_gate':'h_type')+'</p>'+
    '<div class="opts">'+TYPES.map(function(k){return '<button class="opt" data-act="type" data-v="'+k+'">'+ic(k)+t('type_'+k)+'</button>';}).join('')+'</div>'+
-   '<button class="wide" data-act="returnNo">'+ic('F')+t('has_no')+'</button></main>';
+   (g?'':'<button class="wide" data-act="returnNo">'+ic('F')+t('has_no')+'</button>')+'</main>';
  },
  pad:function(){ // ctx.mode: card | exit | returnNo
   var c=ui.ctx,val=c.val||'',n=+val,info='',err=false,okOn=!!val;
@@ -382,7 +387,8 @@ var screens={
  },
  reason:function(){
   function b(k){return '<button class="opt" data-act="reason" data-v="'+k+'">'+t('r_'+k)+'</button>';}
-  return topbar()+'<main class="main">'+backBtn('outcome',1)+'<h2 class="q">'+t('q_reason')+'</h2>'+
+  var g=ui.ctx.gate;
+  return topbar()+'<main class="main">'+(g?backBtn('home'):backBtn('outcome',1))+'<h2 class="q">'+t(g?'q_reason_gate':'q_reason')+'</h2>'+
    '<div class="grp">'+t('g_elig')+'</div><div class="opts two">'+C.ELIG.map(b).join('')+'</div>'+
    '<div class="grp">'+t('g_ops')+'</div><div class="opts two">'+C.OPS.map(b).join('')+'</div>'+
    '<div class="opts">'+b('other')+'</div></main>';
@@ -401,12 +407,13 @@ var screens={
   var s=C.stats(S.visits),c=ui.ctx;
   var hs=Object.keys(s.hours).map(Number).sort(function(a,b){return a-b;}),mx=Math.max.apply(null,hs.map(function(h){return s.hours[h];}).concat([1]));
   var peak=hs.reduce(function(a,h){return s.hours[h]>(s.hours[a]||0)?h:a;},hs[0]);
-  var rs=Object.keys(s.reasons).sort(function(a,b){return s.reasons[b]-s.reasons[a];}).slice(0,3),rmx=rs.length?s.reasons[rs[0]]:1;
+  var rs=Object.keys(s.reasons).sort(function(a,b){return s.reasons[b]-s.reasons[a];}).slice(0,5),rmx=rs.length?s.reasons[rs[0]]:1;
   var sentAt=S.sentAt&&S.sentAt[S.day];
   var days=Object.keys(S.archive).sort().reverse();
   return topbar()+'<main class="main">'+backBtn()+'<h2 class="q">'+t('sum_t')+'</h2>'+
-   '<div class="sumgrid"><div><b>'+s.arrived+'</b><span>'+t('s_arr')+'</span></div><div><b>'+s.served+'</b><span>'+t('s_served')+'</span></div><div><b>'+s.notServed+'</b><span>'+t('s_not')+'</span></div>'+
+   '<div class="sumgrid"><div class="key"><b>'+s.notServed+'</b><span>'+t('s_not')+(s.gate?'<br>'+t('s_gate',{n:s.gate}):'')+'</span></div><div><b>'+s.served+'</b><span>'+t('s_served')+'</span></div><div><b>'+s.arrived+'</b><span>'+t('s_arr')+'</span></div>'+
    '<div><b>'+s.open+'</b><span>'+t('s_open')+'</span></div><div><b>'+(s.medianMs!=null?dur(s.medianMs):'–')+'</b><span>'+t('s_med')+'</span></div><div><b>'+(s.capture!=null?s.capture+'%':'–')+'</b><span>'+t('s_cap')+'</span></div></div>'+
+   '<div class="sec">'+t('top_r')+'</div>'+(rs.length?'<div class="bars">'+rs.map(function(k){return '<div class="r" style="grid-template-columns:1fr 120px 34px"><span>'+t('r_'+k)+'</span><div class="t"><b style="width:'+(s.reasons[k]/rmx*100)+'%"></b></div><span class="n">'+s.reasons[k]+'</span></div>';}).join('')+'</div>':'<div class="empty">'+t('none_yet')+'</div>')+
    (c.closed?'<div class="alert ok">'+t('closed_now')+'</div>':s.open?'<div class="alert">'+t('close_warn',{n:s.open})+'</div>':'')+
    (c.shareFail?'<div class="alert err">'+t('share_fail')+'</div>':'')+
    (s.open?'<button class="btn-line" data-act="closeday">'+t('close_btn')+'</button>':'')+
@@ -415,7 +422,6 @@ var screens={
      (pendingN?'<button class="btn-main" data-act="upnow">'+t('up_now')+' ('+pendingN+')</button>':''):'')+
    sendBtn(S.day,t('send'),!S.cfg.upload_url&&(!s.open||c.closed))+'<p class="hint">'+t('send_h')+(sentAt?' '+t('sent',{t:C.hhmm(sentAt)}):'')+'</p>'+
    '<div class="sec">'+t('by_hour')+'</div>'+(hs.length?'<div class="bars">'+hs.map(function(h){return '<div class="r'+(h===peak?' peak':'')+'"><span class="ltr">'+C.pad2(h)+':00</span><div class="t"><b style="width:'+(s.hours[h]/mx*100)+'%"></b></div><span class="n">'+s.hours[h]+'</span></div>';}).join('')+'</div>':'<div class="empty">'+t('none_yet')+'</div>')+
-   '<div class="sec">'+t('top_r')+'</div>'+(rs.length?'<div class="bars">'+rs.map(function(k){return '<div class="r" style="grid-template-columns:1fr 120px 34px"><span>'+t('r_'+k)+'</span><div class="t"><b style="width:'+(s.reasons[k]/rmx*100)+'%"></b></div><span class="n">'+s.reasons[k]+'</span></div>';}).join('')+'</div>':'<div class="empty">'+t('none_yet')+'</div>')+
    (days.length?'<div class="sec">'+t('earlier')+'</div><div class="days">'+days.map(function(d){var a=S.archive[d],st=S.sentAt&&S.sentAt[d];
      return '<div class="d"><span class="ltr">'+d+'<small>'+t('visits_n',{n:a.visits.length})+', '+(st?t('sent',{t:C.hhmm(st)}):t('not_sent'))+'</small></span><button class="iconbtn" data-act="send" data-v="'+d+'">'+t('send_again')+'</button></div>';}).join('')+'</div>':'')+
    '<button class="linkbtn" data-act="settings">'+t('settings')+'</button></main>';
@@ -491,8 +497,9 @@ var act={
  goKeep:function(v){go(v,{v:ui.ctx.v});},
  lang:function(){S.cfg.lang=lang()==='en'?'ur':'en';persist();render();},
  arrive:function(){go('type');},
+ gate:function(){go('type',{gate:true});},
  leave:function(){go('pad',{mode:'exit',val:''});},
- type:function(k){if(S.cfg.idMode==='card')go('pad',{mode:'card',type:k,val:''});else newVisit(k);},
+ type:function(k){if(ui.ctx.gate)return go('reason',{gate:true,type:k});if(S.cfg.idMode==='card')go('pad',{mode:'card',type:k,val:''});else newVisit(k);},
  returnNo:function(){go('pad',{mode:'returnNo',val:''});},
  key:function(k){var c=ui.ctx,max=ui.screen==='pin'?4:3;c.bad=false;
   if(k==='del')c.val=(c.val||'').slice(0,-1);else if((c.val||'').length<max)c.val=(c.val||'')+k;
@@ -512,7 +519,8 @@ var act={
   if(k==='no')return go('reason',{v:v});
   write(function(){C.stepOut(live(v));});go('doneExit',{msg:t('done_out',{n:v.no})});},
  svc:function(k){closeVisit(ui.ctx.v,'served',k);},
- reason:function(k){closeVisit(ui.ctx.v,'not_served',k);},
+ reason:function(k){var c=ui.ctx;if(c.gate){write(function(){C.turnAway(S,c.type,k,Date.now());});return go('doneExit',{msg:t('done_gate')});}
+  closeVisit(c.v,'not_served',k);},
  undo:undo,
  closeday:function(){write(function(){C.closeOpen(S,Date.now());});go('summary',{closed:true});upload();},
  upnow:function(){upload(true);render();},
